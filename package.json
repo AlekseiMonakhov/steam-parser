@@ -1,0 +1,11 @@
+{
+  "name": "steam-parser",
+  "version": "1.0.0",
+  "main": "index.js",
+  "repository": "git@github.com:AlekseiMonakhov/steam-parser.git",
+  "author": "Aleksei Monakhov <lexmonakhov@gmail.com>",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.19.2"
+  }
+}
