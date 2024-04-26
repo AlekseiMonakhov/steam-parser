@@ -1,5 +1,5 @@
 {
-  "name": "steam-parser",
+  "name": "steam_parser_api",
   "version": "1.0.0",
   "main": "index.js",
   "repository": "git@github.com:AlekseiMonakhov/steam-parser.git",

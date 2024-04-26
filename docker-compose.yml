@@ -12,3 +12,14 @@ services:
       - ./api:/usr/src/app
       - /usr/src/app/node_modules
     restart: unless-stopped
+
+  parser:
+    build:
+      context: ./parser
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./parser:/app
+    environment:
+      - FLASK_ENV=development
+    restart: unless-stopped
