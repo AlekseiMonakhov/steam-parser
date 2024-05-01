@@ -1,17 +1,37 @@
 version: '3.8'
 
 services:
+  postgres:
+    build:
+      context: ./postgres
+    ports:
+      - "5434:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    env_file:
+      - ./postgres/.env
+
   api:
     build:
       context: ./api
     ports:
-      - "3000:3000"
+      - "3008:3008"
     environment:
       NODE_ENV: development
     volumes:
       - ./api:/usr/src/app
       - /usr/src/app/node_modules
     restart: unless-stopped
+
+  auth_service: 
+    build:
+      context: ./authService
+    ports:
+      - "3003:3003"
+    env_file:
+      - ./authService/.env
+    depends_on:
+      - postgres
 
   parser:
     build:
@@ -23,3 +43,16 @@ services:
     environment:
       - FLASK_ENV=development
     restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+    ports:
+      - "3000:3000"
+    depends_on:
+      - postgres
+      - api
+      - auth_service
+
+volumes:
+  postgres-data:
