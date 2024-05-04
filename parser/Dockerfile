@@ -1,4 +1,12 @@
-FROM python:3.8-slim
+FROM selenium/standalone-chrome:124.0-chromedriver-124.0
+
+USER root
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    python3 \
+    python3-pip \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
 
 RUN pip install poetry
 
@@ -11,4 +19,4 @@ RUN poetry config virtualenvs.create false \
 
 EXPOSE 5000
 
-CMD ["python", "server.py"]
+CMD ["python3", "app.py"]
