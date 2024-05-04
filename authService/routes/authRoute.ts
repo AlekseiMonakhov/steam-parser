@@ -13,12 +13,5 @@ authRouter.post('/login', async (req, res) => {
   await authController.login(req, res);
 });
 
-authRouter.post('/logout', async (req, res) => {
-  await authController.logout(req, res);
-});
-
-authRouter.post('/refresh', async (req, res) => {
-  await authController.refresh(req, res);
-});
 
 export default authRouter;

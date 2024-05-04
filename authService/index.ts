@@ -1,9 +1,8 @@
 import express, { Express } from 'express';
 import dotenv from 'dotenv';
 import cors from 'cors';
-import pool from './infrastructure/db/config/postgresConfig';
-import cookieParser from 'cookie-parser';
-import authRouter from './infrastructure/routes/authRoute';
+import pool from './db/postgresConfig';
+import authRouter from './routes/authRoute';
 
 dotenv.config();
 
@@ -12,7 +11,6 @@ const corsOptions = {
   origin: true,
   credentials: true,
 };
-app.use(cookieParser())
 app.use(cors(corsOptions));
 app.use(express.json());
 app.use('/auth/v1', authRouter);

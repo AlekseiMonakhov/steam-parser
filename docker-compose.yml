@@ -8,8 +8,10 @@ services:
       - "5434:5432"
     volumes:
       - postgres-data:/var/lib/postgresql/data
-    env_file:
-      - ./postgres/.env
+    environment:
+      POSTGRES_USER: test_user
+      POSTGRES_PASSWORD: test_password
+      POSTGRES_DB: mydb
 
   api:
     build:
@@ -23,13 +25,17 @@ services:
       - /usr/src/app/node_modules
     restart: unless-stopped
 
-  auth_service: 
+  auth_service:
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_USER: test_user
+      POSTGRES_PASSWORD: test_password
+      POSTGRES_DB: mydb
+      POSTGRES_PORT: 5432
     build:
       context: ./authService
     ports:
       - "3003:3003"
-    env_file:
-      - ./authService/.env
     depends_on:
       - postgres
 
