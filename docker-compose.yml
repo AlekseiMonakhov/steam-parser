@@ -2,16 +2,16 @@ version: '3.8'
 
 services:
   postgres:
-    build:
-      context: ./postgres
+    image: postgres:latest
     ports:
       - "5434:5432"
     volumes:
+      - ./postgres/initdb.sql:/docker-entrypoint-initdb.d/initdb.sql
       - postgres-data:/var/lib/postgresql/data
     environment:
-      POSTGRES_USER: test_user
-      POSTGRES_PASSWORD: test_password
-      POSTGRES_DB: mydb
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: postgres
 
   api:
     build:
@@ -24,18 +24,20 @@ services:
       - ./api:/usr/src/app
       - /usr/src/app/node_modules
     restart: unless-stopped
+    depends_on:
+      - postgres
 
   auth_service:
-    environment:
-      POSTGRES_HOST: postgres
-      POSTGRES_USER: test_user
-      POSTGRES_PASSWORD: test_password
-      POSTGRES_DB: mydb
-      POSTGRES_PORT: 5432
     build:
       context: ./authService
     ports:
       - "3003:3003"
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: postgres
+      POSTGRES_PORT: 5432
     depends_on:
       - postgres
 
@@ -47,8 +49,10 @@ services:
     volumes:
       - ./parser:/app
     environment:
-      - FLASK_ENV=development
+      FLASK_ENV: development
     restart: unless-stopped
+    depends_on:
+      - postgres
 
   frontend:
     build:
@@ -56,9 +60,9 @@ services:
     ports:
       - "3000:3000"
     depends_on:
-      - postgres
       - api
       - auth_service
+      - postgres
 
 volumes:
-  postgres-data:
+  postgres-data: {}
