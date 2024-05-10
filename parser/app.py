@@ -68,22 +68,53 @@ class SteamItemService:
         cursor = conn.cursor()
         logging.info("Saving items to database...")
         for item in items:
-            cursor.execute('''
-                INSERT INTO steam_items (name, hash_name, sell_listings, sell_price, sell_price_text, app_icon, app_name)
-                VALUES (%s, %s, %s, %s, %s, %s, %s)
+            try:
+                cursor.execute('''
+                INSERT INTO steam_items (
+                    name, hash_name, sell_listings, sell_price, sell_price_text, 
+                    app_icon, app_name, tradable, market_name, market_hash_name, 
+                    commodity, market_tradable_restriction, market_marketable_restriction,
+                    marketable, type, background_color, icon_url, icon_url_large
+                )
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                 ON CONFLICT (hash_name) DO UPDATE SET
-                sell_listings = EXCLUDED.sell_listings,
-                sell_price = EXCLUDED.sell_price,
-                sell_price_text = EXCLUDED.sell_price_text;
+                    sell_listings = EXCLUDED.sell_listings,
+                    sell_price = EXCLUDED.sell_price,
+                    sell_price_text = EXCLUDED.sell_price_text,
+                    app_icon = EXCLUDED.app_icon,
+                    app_name = EXCLUDED.app_name,
+                    tradable = EXCLUDED.tradable,
+                    market_name = EXCLUDED.market_name,
+                    market_hash_name = EXCLUDED.market_hash_name,
+                    commodity = EXCLUDED.commodity,
+                    market_tradable_restriction = EXCLUDED.market_tradable_restriction,
+                    market_marketable_restriction = EXCLUDED.market_marketable_restriction,
+                    marketable = EXCLUDED.marketable,
+                    type = EXCLUDED.type,
+                    background_color = EXCLUDED.background_color,
+                    icon_url = EXCLUDED.icon_url,
+                    icon_url_large = EXCLUDED.icon_url_large;
             ''', (
-                item['name'], item['hash_name'], item['sell_listings'],
-                item['sell_price'], item['sell_price_text'], item['app_icon'],
-                item['app_name']
+                item['name'], item['hash_name'], item.get('sell_listings', 0),
+                item.get('sell_price', 0), item.get('sell_price_text', ''),
+                item.get('app_icon', ''), item.get('app_name', ''),
+                item.get('tradable', False), item.get('market_name', ''),
+                item.get('market_hash_name', ''), item.get('commodity', False),
+                item.get('market_tradable_restriction', 0), item.get('market_marketable_restriction', 0),
+                item.get('marketable', False), item.get('type', ''),
+                item.get('background_color', ''), item.get('icon_url', ''),
+                item.get('icon_url_large', '')
             ))
+            except Exception as e:
+             logging.error(f"Error saving item {item['hash_name']}: {e}")
+            continue  # Продолжаем обработку следующих предметов, не прерывая всю операцию
+
         conn.commit()
         cursor.close()
         conn.close()
         logging.info("Items saved to database.")
+
+
 
     def init_driver(self, proxy=None):
         """Initialize a Selenium WebDriver with optional proxy settings."""
@@ -141,8 +172,8 @@ class SteamItemService:
     def run(self):
         items = self.get_steam_items()
         self.save_items_to_db(items)
-        for item in items:
-            self.fetch_item_data(item['name'])
+        # for item in items:
+        #     self.fetch_item_data(item['name'])
 
 
 @app.route('/items/<int:appid>')
