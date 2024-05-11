@@ -12,10 +12,8 @@ import psycopg2
 from dotenv import load_dotenv
 import logging
 
-# Настройка логирования
 logging.basicConfig(level=logging.INFO)
 
-# Загрузка переменных окружения
 load_dotenv()
 
 app = Flask(__name__)
@@ -119,61 +117,39 @@ class SteamItemService:
     def init_driver(self, proxy=None):
         """Initialize a Selenium WebDriver with optional proxy settings."""
         options = Options()
-        options.add_argument('--headless')  # Important for running in non-GUI environments
+        options.add_argument('--headless')  
         # if proxy:  # Прокси временно отключен
         #     options.add_argument(f'--proxy-server={proxy}')
         return webdriver.Chrome(options=options)
 
-    def parse_graph_data(self, driver):
-        """Извлекает данные графика."""
-        data = []
-        tooltips = driver.find_elements(By.CLASS_NAME, 'jplot-highlighter-tooltip')
-        for tooltip in tooltips:
-            # Извлекаем дату, цену и количество продаж
-            date = tooltip.find_element(By.CLASS_NAME, 'priceHistoryTime').text.strip()
-            strong_elements = tooltip.find_elements(By.TAG_NAME, 'strong')
-            price = strong_elements[1].text.strip()
-            sold = strong_elements[2].text.strip().split()[0]
-            data.append({
-                'date': date,
-                'price': price,
-                'sold': sold
-            })
-        return data
-
-
-
-    def fetch_item_data(self, name):
-        logging.info(f"Fetching data for item: {name}")
-        driver = self.init_driver()  # Прокси отключен
+ 
+    def fetch_item_nameid(self, name):
+        logging.info(f"Запрашиваем данные для предмета: {name}")
+        driver = self.init_driver()  # Прокси временно отключен
         url = f'https://steamcommunity.com/market/listings/{self.appid}/{name}'
         driver.get(url)
-    
-        # Ожидание загрузки графика
-        WebDriverWait(driver, 10).until(
-            EC.presence_of_element_located((By.CSS_SELECTOR, ".jqplot-event-canvas"))
-        )
-    
-        # Сбор данных за месяц
-        data_points = driver.find_elements(By.CSS_SELECTOR, ".jqplot-xaxis-tick")
-        for point in data_points:
-            ActionChains(driver).move_to_element(point).perform()  # Перемещение курсора к точке
-            tooltip = WebDriverWait(driver, 10).until(
-                EC.visibility_of_element_located((By.CSS_SELECTOR, ".jqplot-highlighter-tooltip"))
-            )
-            date = tooltip.find_element(By.TAG_NAME, "strong").text
-            details = tooltip.text.split('\n')[1:]  # Разделение данных о цене и количестве
-            print(f"Date: {date}, Price: {details[0]}, Sold: {details[1]}")
-            logging.info(f"Data for {name} on {date}: {details[0]}, {details[1]}")
-    
+        
+        # Поиск в HTML коде вызова ItemActivityTicker.Start и извлечение item_nameid
+        html_content = driver.page_source
+        start_index = html_content.find("ItemActivityTicker.Start(")
+        if start_index != -1:
+            start_index += len("ItemActivityTicker.Start(")
+            end_index = html_content.find(")", start_index)
+            item_nameid = html_content[start_index:end_index].strip()
+            logging.info(f"item_nameid для {name}: {item_nameid}")
+            print(f"item_nameid для {name}: {item_nameid}")
+        else:
+            logging.error(f"item_nameid для {name} не найден")
+            print(f"ID для {name} не найден")
+
         driver.quit()
 
 
     def run(self):
         items = self.get_steam_items()
         self.save_items_to_db(items)
-        # for item in items:
-        #     self.fetch_item_data(item['name'])
+        for item in items:
+            self.fetch_item_nameid(item['name'])
 
 
 @app.route('/items/<int:appid>')
