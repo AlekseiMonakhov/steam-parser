@@ -31,3 +31,13 @@ CREATE TABLE IF NOT EXISTS steam_items (
   icon_url VARCHAR(255),
   icon_url_large VARCHAR(255)
 );
+
+CREATE TABLE IF NOT EXISTS price_history (
+    id SERIAL PRIMARY KEY,
+    item_id INTEGER NOT NULL,
+    date TIMESTAMP WITHOUT TIME ZONE NOT NULL,
+    price NUMERIC(10, 3) NOT NULL,
+    volume INTEGER NOT NULL,
+    CONSTRAINT fk_item FOREIGN KEY (item_id) REFERENCES steam_items(id)
+);
+
