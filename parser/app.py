@@ -35,6 +35,7 @@ class SteamItemService:
         self.base_url = 'https://steamcommunity.com/market/search/render/'
         self.proxies = self.load_proxies()
         logging.info("Service initialized.")
+        
 
     def load_proxies(self):
         try:
@@ -45,7 +46,7 @@ class SteamItemService:
         except FileNotFoundError:
             logging.warning("Proxy file not found.")
             return []
-
+        
     def get_steam_items(self):
         logging.info("Fetching Steam items...")
         params = {
@@ -57,9 +58,17 @@ class SteamItemService:
             'norender': 1
         }
         response = requests.get(self.base_url, params=params)
-        items = response.json().get('results', [])
-        logging.info(f"{len(items)} items fetched.")
-        return items
+        if response.status_code == 200:
+            try:
+                data = response.json()
+                items = data.get('results', [])
+                logging.info(f"{len(items)} items fetched.")
+                return items
+            except ValueError:
+                logging.error("Invalid JSON response")
+        else:
+            logging.error(f"Failed to fetch items. Status code: {response.status_code}")
+        return []
 
     def save_items_to_db(self, items):
         conn = get_db_connection()
@@ -113,48 +122,58 @@ class SteamItemService:
                 conn.commit()
                 logging.info(f"Successfully saved or updated item: {item['hash_name']}")
             except Exception as e:
-                conn.rollback()  # Откат изменений в случае ошибки
+                conn.rollback()  
                 logging.error(f"Error saving item {item['hash_name']}: {e}")
-                continue  # Продолжаем обработку следующих предметов, не прерывая всю операцию
+                continue 
 
         cursor.close()
         conn.close()
         logging.info("Items saved to database.")
 
-
-
-
-
-
     def init_driver(self, proxy=None):
-        """Initialize a Selenium WebDriver with optional proxy settings."""
         options = Options()
         options.add_argument('--headless')  
         # if proxy:  # Прокси временно отключен
         #     options.add_argument(f'--proxy-server={proxy}')
         return webdriver.Chrome(options=options)
 
- 
     def fetch_item_nameid(self, name):
-        logging.info(f"Запрашиваем данные для предмета: {name}")
-        driver = self.init_driver()  # Прокси временно отключен
+        logging.info(f"Fetching item_nameid for item: {name}")
+        driver = self.init_driver()
         url = f'https://steamcommunity.com/market/listings/{self.appid}/{name}'
         driver.get(url)
         
-        # Поиск в HTML коде вызова ItemActivityTicker.Start и извлечение item_nameid
-        html_content = driver.page_source
-        start_index = html_content.find("ItemActivityTicker.Start(")
-        if start_index != -1:
-            start_index += len("ItemActivityTicker.Start(")
-            end_index = html_content.find(")", start_index)
-            item_nameid = html_content[start_index:end_index].strip()
-            logging.info(f"item_nameid для {name}: {item_nameid}")
-            print(f"item_nameid для {name}: {item_nameid}")
-        else:
-            logging.error(f"item_nameid для {name} не найден")
-            print(f"ID для {name} не найден")
+        try:
+            html_content = driver.page_source
+            start_index = html_content.find("ItemActivityTicker.Start(")
+            if start_index != -1:
+                start_index += len("ItemActivityTicker.Start(")
+                end_index = html_content.find(")", start_index)
+                item_nameid = html_content[start_index:end_index].strip()
+                logging.info(f"item_nameid for {name}: {item_nameid}")
+                self.update_item_nameid(name, item_nameid)
+            else:
+                logging.error(f"item_nameid for {name} not found")
+        finally:
+            driver.quit()
 
-        driver.quit()
+    def update_item_nameid(self, name, item_nameid):
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        try:
+            cursor.execute('''
+            UPDATE steam_items
+            SET item_nameid = %s
+            WHERE name = %s
+            ''', (item_nameid, name))
+            conn.commit()
+            logging.info(f"Successfully updated item_nameid: {item_nameid} for item with name: {name}")
+        except Exception as e:
+            conn.rollback()
+            logging.error(f"Error updating item_nameid {item_nameid} for item with name {name}: {e}")
+        finally:
+            cursor.close()
+            conn.close()
 
     def fetch_price_history(self):
         conn = get_db_connection()
@@ -210,23 +229,15 @@ class SteamItemService:
         conn.close()
         logging.info("Completed updating price history.")
 
-
-
-
-
-
-
     def run(self):
         items = self.get_steam_items()
         self.save_items_to_db(items)
+        for item in items:
+            self.fetch_item_nameid(item['name'])
         self.fetch_price_history()
-        # for item in items:
-        #     self.fetch_item_nameid(item['name'])
-
-
+        
 @app.route('/items/<int:appid>')
 def items(appid):
-    """Endpoint for retrieving and processing items by appid."""
     service = SteamItemService(os.getenv('API_KEY'), appid)
     service.run()
     return jsonify({"status": "Completed processing items"}), 200

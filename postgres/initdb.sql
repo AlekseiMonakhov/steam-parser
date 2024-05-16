@@ -12,7 +12,7 @@ CREATE TABLE IF NOT EXISTS users (
 
 CREATE TABLE IF NOT EXISTS steam_items (
   id SERIAL PRIMARY KEY,
-  name VARCHAR(255),
+  name VARCHAR(255) UNIQUE,
   hash_name VARCHAR(255) UNIQUE,
   sell_listings INTEGER,
   sell_price INTEGER,
@@ -29,7 +29,8 @@ CREATE TABLE IF NOT EXISTS steam_items (
   type VARCHAR(50),
   background_color VARCHAR(50),
   icon_url VARCHAR(255),
-  icon_url_large VARCHAR(255)
+  icon_url_large VARCHAR(255),
+  item_nameid VARCHAR(255) NULL
 );
 
 CREATE TABLE IF NOT EXISTS price_history (
