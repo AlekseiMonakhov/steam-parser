@@ -11,6 +11,7 @@ selenium = "^4.20"
 python-dotenv = "^0.20.0"
 requests = "^2.26"
 psycopg2-binary = "^2.9"
+apscheduler = "^3.9.1"
 
 [tool.poetry.dev-dependencies]
 pytest = "^6.2"
