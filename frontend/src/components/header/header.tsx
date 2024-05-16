@@ -48,7 +48,7 @@ export default function Header() {
           <Link to="/" className={styles.logoLink}>
             <img src={logo} alt="Logo" className={styles.logo} />
             <Typography variant="h6" className={styles.title}>
-              SteamParser
+              ASystems
             </Typography>
           </Link>
           {user ? (
