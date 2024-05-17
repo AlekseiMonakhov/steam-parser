@@ -28,10 +28,13 @@ CREATE TABLE IF NOT EXISTS steam_items (
   marketable BOOLEAN,
   type VARCHAR(50),
   background_color VARCHAR(50),
-  icon_url VARCHAR(255),
-  icon_url_large VARCHAR(255),
-  item_nameid VARCHAR(255) NULL
+  icon_url VARCHAR(512),
+  icon_url_large VARCHAR(512),
+  item_nameid VARCHAR(255) NULL,
+  appid INTEGER
 );
+
+
 
 CREATE TABLE IF NOT EXISTS price_history (
     id SERIAL PRIMARY KEY,
