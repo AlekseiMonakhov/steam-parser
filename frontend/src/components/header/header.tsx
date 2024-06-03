@@ -42,58 +42,58 @@ export default function Header() {
   };
 
   return (
-    <Box className={styles.header}>
-      <AppBar position="static" color="inherit" className={styles.AppBar}>
-        <Toolbar>
-          <Link to="/" className={styles.logoLink}>
-            <img src={logo} alt="Logo" className={styles.logo} />
-            <Typography variant="h6" className={styles.title}>
+      <Box className={styles.header}>
+        <AppBar position="static" sx={{ backgroundColor: 'black', width: '100%' }}>
+          <Toolbar sx={{ display: 'flex', justifyContent: 'space-between', width: '100%' }}>
+            <Link to="/" className={styles.logoLink}>
+              <img src={logo} alt="Logo" className={styles.logo} />
+            </Link>
+            <Typography variant="h6" sx={{ flexGrow: 1, textAlign: 'center', fontWeight: 'bold', fontSize: '1.5rem', color: 'darkred' }}>
               ASystems
             </Typography>
-          </Link>
-          {user ? (
-            <Box className={styles.MenuButton}>
-              <IconButton
-                size="large"
-                aria-label="account of current user"
-                aria-controls="menu-appbar"
-                aria-haspopup="true"
-                onClick={handleMenuClick}
-                color="inherit"
-              >
-                <AccountCircle />
-              </IconButton>
-              <Menu
-                id="menu-appbar"
-                anchorEl={anchorEl}
-                anchorOrigin={{
-                  vertical: 'top',
-                  horizontal: 'right',
-                }}
-                keepMounted
-                transformOrigin={{
-                  vertical: 'top',
-                  horizontal: 'right',
-                }}
-                open={Boolean(anchorEl)}
-                onClose={handleClose}
-              >
-                <MenuItem onClick={handleMenuItemClick}>Выйти</MenuItem>
-              </Menu>
-            </Box>
-          ) : (
-            <Box className={styles.MenuButton}>
-              <Button
-                className={styles.LoggedInButton}
-                color="inherit"
-                onClick={handleLoginClick}
-              >
-                Login
-              </Button>
-            </Box>
-          )}
-        </Toolbar>
-      </AppBar>
-    </Box>
+            {user ? (
+                <Box className={styles.MenuButton}>
+                  <IconButton
+                      size="large"
+                      aria-label="account of current user"
+                      aria-controls="menu-appbar"
+                      aria-haspopup="true"
+                      onClick={handleMenuClick}
+                      color="inherit"
+                  >
+                    <AccountCircle />
+                  </IconButton>
+                  <Menu
+                      id="menu-appbar"
+                      anchorEl={anchorEl}
+                      anchorOrigin={{
+                        vertical: 'top',
+                        horizontal: 'right',
+                      }}
+                      keepMounted
+                      transformOrigin={{
+                        vertical: 'top',
+                        horizontal: 'right',
+                      }}
+                      open={Boolean(anchorEl)}
+                      onClose={handleClose}
+                  >
+                    <MenuItem onClick={handleMenuItemClick}>Выйти</MenuItem>
+                  </Menu>
+                </Box>
+            ) : (
+                <Box className={styles.MenuButton}>
+                  <Button
+                      className={styles.LoggedInButton}
+                      color="inherit"
+                      onClick={handleLoginClick}
+                  >
+                    Login
+                  </Button>
+                </Box>
+            )}
+          </Toolbar>
+        </AppBar>
+      </Box>
   );
 }
