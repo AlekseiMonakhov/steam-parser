@@ -22,77 +22,16 @@
 }
 
 .tableContainer {
-  min-width: 70%;
+  width: 100%;
   margin-bottom: 20px;
-}
-
-.tableHeader, .tableRow {
-  display: grid;
-  grid-template-columns: repeat(7, 1fr);
-  padding: 10px;
-  margin-bottom: 10px;.MainPage {
-  text-align: center;
-  height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  overflow: hidden;
-}
-
-.MainPage-header {
-  min-height: 80vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  color: rgb(5, 0, 0);
-}
-
-.title {
-  font-size: 36px;
-  margin-bottom: 20px;
-}
-
-.table {
-  border-collapse: collapse;
-  width: 80%;
-  margin-bottom: 20px;
-}
-
-.table th, .table td {
-  border: 1px solid #ddd;
-  padding: 8px;
-  text-align: center;
-}
-
-.table th {
-  padding-top: 12px;
-  padding-bottom: 12px;
-  background-color: #f2f2f2;
-  color: black;
+  overflow-x: auto;
 }
 
 .tableRow {
-  border-radius: 10px;
-  background-color: #f9f9f9;
+  display: grid;
+  grid-template-columns: 2fr repeat(5, 1fr);
+  padding: 10px;
   margin-bottom: 10px;
-  overflow: hidden;
-}
-
-.tableRow td:first-child {
-  border-top-left-radius: 10px;
-  border-bottom-left-radius: 10px;
-}
-
-.tableRow td:last-child {
-  border-top-right-radius: 10px;
-  border-bottom-right-radius: 10px;
-}
-
-.pagination {
-  margin-top: 20px;
-}
-
   background-color: #f9f9f9;
   border-radius: 10px;
 }
@@ -100,6 +39,10 @@
 .tableHeader {
   background-color: #f2f2f2;
   font-weight: bold;
+}
+
+.marketName {
+  white-space: nowrap;
 }
 
 .pagination {

@@ -8,4 +8,6 @@ RUN yarn install
 
 COPY . .
 
-CMD ["yarn", "start"]
+RUN yarn global add nodemon
+
+CMD ["nodemon", "--watch", ".", "--exec", "yarn", "start"]
