@@ -4,10 +4,14 @@ WORKDIR /usr/src/app
 
 COPY package*.json ./
 
-RUN yarn install
+# Устанавливаем все зависимости, включая devDependencies
+RUN yarn install --frozen-lockfile
+
+# Устанавливаем nodemon глобально
+RUN yarn global add nodemon
 
 COPY . .
 
-EXPOSE 3000
+EXPOSE 3008
 
-CMD ["node", "index.js"]
+CMD ["yarn", "dev"]

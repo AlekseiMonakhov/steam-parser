@@ -6,7 +6,7 @@ export default function MainPage() {
   return (
     <div className={styles.MainPage}>
       <header className={styles['MainPage-header']}>
-        <h3 className={styles.title}>SteamParser</h3>
+        <h3 className={styles.title}>ASystems</h3>
         <h1 className={styles.text}>Здесь будет страница аналитики</h1>
         <BuildIcon className={styles.icon} />
         <a className={styles.text}>Ведутся работы</a>

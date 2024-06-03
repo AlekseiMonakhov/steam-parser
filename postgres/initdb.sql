@@ -12,7 +12,7 @@ CREATE TABLE IF NOT EXISTS users (
 
 CREATE TABLE IF NOT EXISTS steam_items (
   id SERIAL PRIMARY KEY,
-  name VARCHAR(255),
+  name VARCHAR(255) UNIQUE,
   hash_name VARCHAR(255) UNIQUE,
   sell_listings INTEGER,
   sell_price INTEGER,
@@ -28,6 +28,28 @@ CREATE TABLE IF NOT EXISTS steam_items (
   marketable BOOLEAN,
   type VARCHAR(50),
   background_color VARCHAR(50),
-  icon_url VARCHAR(255),
-  icon_url_large VARCHAR(255)
+  icon_url VARCHAR(512),
+  icon_url_large VARCHAR(512),
+  item_nameid VARCHAR(255) NULL,
+  appid INTEGER
+);
+
+
+
+CREATE TABLE IF NOT EXISTS price_history (
+    id SERIAL PRIMARY KEY,
+    item_id INTEGER NOT NULL,
+    date TIMESTAMP WITHOUT TIME ZONE NOT NULL,
+    price NUMERIC(10, 3) NOT NULL,
+    volume INTEGER NOT NULL,
+    CONSTRAINT fk_item FOREIGN KEY (item_id) REFERENCES steam_items(id)
+);
+
+CREATE TABLE IF NOT EXISTS item_orders (
+    id SERIAL PRIMARY KEY,
+    item_id INTEGER NOT NULL,
+    order_type VARCHAR(50) NOT NULL, 
+    price NUMERIC(10, 3) NOT NULL,
+    quantity INTEGER NOT NULL,
+    CONSTRAINT fk_item FOREIGN KEY (item_id) REFERENCES steam_items(id)
 );

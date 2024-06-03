@@ -1,10 +1,12 @@
 .header {
   display: flex;
   justify-content: flex-end;
+  background-color: black;
 }
 
 .AppBar {
   border-radius: 10px;
+
 }
 
 .MenuButton {
@@ -24,6 +26,7 @@
   font-weight: 500;
   letter-spacing: 1.2px;
   max-width: 70%;
+  color: antiquewhite;
 }
 
 .logo {
