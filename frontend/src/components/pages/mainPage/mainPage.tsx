@@ -16,7 +16,7 @@ export default function MainPage() {
     const itemsPerPage = 10;
 
     useEffect(() => {
-        fetch('http://localhost:3008/api/coefficients/578080')
+        fetch('http://localhost:3008/api/coefficients/730')
             .then(response => response.json())
             .then(data => setData(data))
             .catch(error => console.error('Error fetching data:', error));

@@ -18,7 +18,7 @@ class SteamItemService:
         logging.info("Fetching Steam items...")
         params = {
             'appid': self.appid,
-            'count': 1000,
+            'count': 10000,
             'search_descriptions': 0,
             'sort_column': 'popular',
             'sort_dir': 'desc',

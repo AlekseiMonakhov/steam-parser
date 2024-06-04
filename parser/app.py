@@ -11,7 +11,7 @@ load_dotenv()
 
 app = Flask(__name__)
 
-APP_IDS = [570, 730, 578080]
+APP_IDS = [730]
 
 def run_service(appid):
     service = SteamItemService(Config.API_KEY, appid)
