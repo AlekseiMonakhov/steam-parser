@@ -12,6 +12,8 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: postgres
+    networks:
+      - my-network
 
   api:
     build:
@@ -26,6 +28,8 @@ services:
     restart: unless-stopped
     depends_on:
       - postgres
+    networks:
+      - my-network
 
   auth_service:
     build:
@@ -40,6 +44,8 @@ services:
       POSTGRES_PORT: 5432
     depends_on:
       - postgres
+    networks:
+      - my-network
 
   parser:
     build:
@@ -53,19 +59,24 @@ services:
     restart: unless-stopped
     depends_on:
       - postgres
+    networks:
+      - my-network
 
   frontend:
     build:
       context: ./frontend
     ports:
       - "3000:3000"
-    volumes:
-      - ./frontend:/usr/src/frontend
-      - /usr/src/frontend/node_modules
     depends_on:
       - api
       - auth_service
       - postgres
+    networks:
+      - my-network
+
+networks:
+  my-network:
+    driver: bridge
 
 volumes:
   postgres-data: {}
