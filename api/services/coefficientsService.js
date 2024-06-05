@@ -177,6 +177,12 @@ const calculateCoefficients = async (appid) => {
     const attractiveness = getAttractiveness(avgMonthlySellValue, avgMonthlyPurchaseValue);
     const PZCoefficient = await getPZCoefficient(item.id, avgMonthlyPrice, dailyLiquidity);
 
+    if (
+      avgMonthlyPrice === 0 || volatility === 0 || PZCoefficient === 0
+    ) {
+      continue; 
+    }
+
     coefficients.push({
       market_name: item.market_name,
       dailyLiquidity,
