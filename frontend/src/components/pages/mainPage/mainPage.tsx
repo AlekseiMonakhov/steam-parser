@@ -8,6 +8,7 @@ interface Item {
     avgMonthlyPrice: number;
     volatility: number;
     attractiveness: number;
+    PZCoefficient: number;
 }
 
 export default function MainPage() {
@@ -34,21 +35,21 @@ export default function MainPage() {
                 <h1 className={styles.title}>Аналитика</h1>
                 <div className={styles.tableContainer}>
                     <div className={`${styles.tableRow} ${styles.tableHeader}`}>
-                        <div>Предмет</div>
-                        <div>К1</div>
-                        <div>К2</div>
-                        <div>К3</div>
-                        <div>К4</div>
-                        <div>К5</div>
+                        <div>Item</div>
+                        <div>Л</div>
+                        <div>СР</div>
+                        <div>В</div>
+                        <div>П</div>
+                        <div>ПЗ</div>
                     </div>
                     {currentData.map((item, index) => (
                         <div key={index} className={styles.tableRow}>
                             <div className={styles.marketName}>{item.market_name}</div>
                             <div>{item.dailyLiquidity}</div>
-                            <div>{item.avgMonthlyPrice}</div>
-                            <div>{item.volatility}</div>
-                            <div>{item.attractiveness}</div>
-                            <div>-</div>
+                            <div>{Number(item.avgMonthlyPrice).toFixed(3)}</div>
+                            <div>{Number(item.volatility).toFixed(3)}</div>
+                            <div>{Number(item.attractiveness).toFixed(3)}</div>
+                            <div>{Number(item.PZCoefficient).toFixed(3)}</div>
                         </div>
                     ))}
                 </div>

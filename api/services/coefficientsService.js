@@ -59,27 +59,99 @@ const getVolatility = async (item_id) => {
   return result.rows[0]?.volatility || 0;
 };
 
-const getAttractiveness = async (item_id, avg_monthly_price) => {
+const getAveragePurchaseValue = async (item_id, avg_monthly_price) => {
   const query = `
-    WITH buy_prices AS (
-      SELECT SUM(price * quantity) / SUM(quantity) AS buy_price
-      FROM item_orders
-      WHERE order_type = 'buy'
-        AND price > $1
-        AND item_id = $2
-    ),
-    sell_prices AS (
-      SELECT SUM(price * quantity) / SUM(quantity) AS sell_price
-      FROM item_orders
-      WHERE order_type = 'sell'
-        AND price < $1
-        AND item_id = $2
-    )
-    SELECT (sell_prices.sell_price * 0.87) / buy_prices.buy_price AS attractiveness
-    FROM buy_prices, sell_prices
+    SELECT SUM(price * volume) / SUM(volume) AS average_purchase_value
+    FROM price_history
+    WHERE price > $1
+      AND item_id = $2
   `;
   const result = await pool.query(query, [avg_monthly_price, item_id]);
-  return result.rows[0]?.attractiveness || 0;
+  return result.rows[0]?.average_purchase_value || 0;
+};
+
+const getAverageSellValue = async (item_id, avg_monthly_price) => {
+  const query = `
+    SELECT SUM(price * volume) / SUM(volume) AS average_sell_value
+    FROM price_history
+    WHERE price < $1
+      AND item_id = $2
+  `;
+  const result = await pool.query(query, [avg_monthly_price, item_id]);
+  return result.rows[0]?.average_sell_value || 0;
+};
+
+const getAverageMonthlyPurchaseValue = (avg_purchase_value) => {
+  return avg_purchase_value / 30;
+};
+
+const getAverageMonthlySellValue = (avg_sell_value) => {
+  return avg_sell_value / 30;
+};
+
+const getAttractiveness = (avg_monthly_sell_value, avg_monthly_purchase_value) => {
+  if (avg_monthly_purchase_value === 0) {
+    return 0;
+  }
+  return (avg_monthly_sell_value * 0.87) / avg_monthly_purchase_value;
+};
+
+const getPZCoefficient = async (item_id, avg_monthly_price, daily_liquidity) => {
+  if (avg_monthly_price === 0 || daily_liquidity === 0) {
+    return 0; // Избегаем деления на ноль, возвращаем 0
+  }
+
+  const query = `
+    WITH request_data AS (
+      SELECT price, SUM(quantity) AS total_quantity
+      FROM item_orders
+      WHERE order_type = 'buy'
+        AND price >= $1 * 0.5
+        AND item_id = $2
+      GROUP BY price
+    ),
+    cumulative_requests AS (
+      SELECT price, 
+             SUM(total_quantity) OVER (ORDER BY price) AS cumulative_quantity
+      FROM request_data
+    ),
+    liquidity_data AS (
+      SELECT price, cumulative_quantity / NULLIF($3, 0) AS liquidity
+      FROM cumulative_requests
+    ),
+    margin_data AS (
+      SELECT price, price * 0.87 / NULLIF($1, 0) AS margin1
+      FROM request_data
+    ),
+    pz_data AS (
+      SELECT liquidity_data.price,
+             liquidity_data.liquidity AS liquidity,
+             margin_data.margin1 - 1 AS margin2,
+             CASE
+               WHEN (margin_data.margin1 - 1) = 0 THEN 0
+               ELSE liquidity_data.liquidity / NULLIF((margin_data.margin1 - 1), 0)
+             END AS PZ
+      FROM liquidity_data
+      JOIN margin_data ON liquidity_data.price = margin_data.price
+    )
+    SELECT PZ
+    FROM pz_data
+    WHERE PZ IS NOT NULL -- исключаем нулевые значения
+    ORDER BY PZ DESC
+    LIMIT 1
+  `;
+
+  try {
+    const result = await pool.query(query, [avg_monthly_price, item_id, daily_liquidity]);
+    console.log('Query result:', result.rows);
+    if (result.rows.length === 0) {
+      return 0; // возвращаем 0 если нет данных
+    }
+    return result.rows[0]?.pz || 0; // возвращаем вычисленное значение коэффициента ПЗ
+  } catch (error) {
+    console.error('Error executing query:', error);
+    return 0;
+  }
 };
 
 const calculateCoefficients = async (appid) => {
@@ -98,14 +170,24 @@ const calculateCoefficients = async (appid) => {
     const avgDailyPrice = await getAverageDailyPrice(item.id);
     const avgMonthlyPrice = await getAverageMonthlyPrice(item.id);
     const volatility = await getVolatility(item.id);
-    const attractiveness = await getAttractiveness(item.id, avgMonthlyPrice);
+    const avgPurchaseValue = await getAveragePurchaseValue(item.id, avgMonthlyPrice);
+    const avgSellValue = await getAverageSellValue(item.id, avgMonthlyPrice);
+    const avgMonthlyPurchaseValue = getAverageMonthlyPurchaseValue(avgPurchaseValue);
+    const avgMonthlySellValue = getAverageMonthlySellValue(avgSellValue);
+    const attractiveness = getAttractiveness(avgMonthlySellValue, avgMonthlyPurchaseValue);
+    const PZCoefficient = await getPZCoefficient(item.id, avgMonthlyPrice, dailyLiquidity);
 
     coefficients.push({
       market_name: item.market_name,
       dailyLiquidity,
       avgMonthlyPrice,
       volatility,
-      attractiveness
+      avgPurchaseValue,
+      avgSellValue,
+      avgMonthlyPurchaseValue,
+      avgMonthlySellValue,
+      attractiveness,
+      PZCoefficient
     });
   }
 
