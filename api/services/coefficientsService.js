@@ -2,7 +2,7 @@ const pool = require('../database/db');
 
 const getDailyLiquidity = async (item_id) => {
   const query = `
-    SELECT COUNT(*) / 30 AS daily_liquidity
+    SELECT SUM(volume) / 30 AS daily_liquidity
     FROM price_history
     WHERE date >= NOW() - INTERVAL '30 days'
       AND item_id = $1
