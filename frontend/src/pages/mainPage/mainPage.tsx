@@ -5,11 +5,11 @@ import CircularProgress from '@mui/material/CircularProgress';
 
 interface Item {
     market_name: string;
-    dailyLiquidity: string;
-    avgMonthlyPrice: number;
-    volatility: number;
-    attractiveness: number;
-    PZCoefficient: number;
+    coefficientL: number;
+    coefficientSR: number;
+    coefficientV: number;
+    coefficientP: number;
+    coefficientPZ: string;
 }
 
 export default function MainPage() {
@@ -17,7 +17,6 @@ export default function MainPage() {
     const [loading, setLoading] = useState(true);
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 10;
-    const fetchInterval = 120000; // Интервал повторного запроса данных, мс
 
     const fetchData = () => {
         fetch('http://localhost:3008/api/coefficients/730')
@@ -35,8 +34,6 @@ export default function MainPage() {
 
     useEffect(() => {
         fetchData();
-        const interval = setInterval(fetchData, fetchInterval);
-        return () => clearInterval(interval); // Очистка интервала при размонтировании компонента
     }, []);
 
     const handlePageChange = (_event: React.ChangeEvent<unknown>, value: number) => {
@@ -64,11 +61,11 @@ export default function MainPage() {
                         {currentData.map((item, index) => (
                             <div key={index} className={styles.tableRow}>
                                 <div className={styles.marketName}>{item.market_name}</div>
-                                <div>{item.dailyLiquidity}</div>
-                                <div>{Number(item.avgMonthlyPrice).toFixed(3)}</div>
-                                <div>{Number(item.volatility).toFixed(3)}</div>
-                                <div>{Number(item.attractiveness).toFixed(3)}</div>
-                                <div>{Number(item.PZCoefficient).toFixed(3)}</div>
+                                <div>{item.coefficientL}</div>
+                                <div>{Number(item.coefficientSR).toFixed(3)}</div>
+                                <div>{Number(item.coefficientV).toFixed(3)}</div>
+                                <div>{Number(item.coefficientP).toFixed(3)}</div>
+                                <div>{item.coefficientPZ}</div>
                             </div>
                         ))}
                     </div>
