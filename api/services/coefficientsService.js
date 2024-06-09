@@ -143,7 +143,6 @@ const getPZCoefficient = async (item_id, avg_monthly_price, daily_liquidity) => 
 
   try {
     const result = await pool.query(query, [avg_monthly_price, item_id, daily_liquidity]);
-    console.log('Query result:', result.rows);
     if (result.rows.length === 0) {
       return 0; // возвращаем 0 если нет данных
     }

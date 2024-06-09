@@ -17,7 +17,7 @@ export default function MainPage() {
     const [loading, setLoading] = useState(true);
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 10;
-    const fetchInterval = 15000; // Интервал повторного запроса данных, мс
+    const fetchInterval = 120000; // Интервал повторного запроса данных, мс
 
     const fetchData = () => {
         fetch('http://localhost:3008/api/coefficients/730')
