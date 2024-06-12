@@ -1,8 +1,8 @@
 import React from 'react';
 import { Route, Routes, Navigate } from 'react-router-dom';
 import { useUserStore } from './storage/userStore';
-import MainPage from './components/pages/mainPage/mainPage';
-import NotFound from './components/pages/notFound/notFound';
+import MainPage from './pages/mainPage/mainPage';
+import NotFound from './pages/notFound/notFound';
 import Login from './components/auth/login';
 import Registration from './components/auth/registration';
 

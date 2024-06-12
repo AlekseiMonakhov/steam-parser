@@ -3,13 +3,18 @@ import styles from './mainPage.module.css';
 import Pagination from '@mui/material/Pagination';
 import CircularProgress from '@mui/material/CircularProgress';
 
+interface PZCoefficient {
+    price: string;
+    coefficientPZ: number;
+}
+
 interface Item {
     market_name: string;
     coefficientL: number;
     coefficientSR: number;
     coefficientV: number;
     coefficientP: number;
-    coefficientPZ: string;
+    coefficientPZ: PZCoefficient[];
 }
 
 export default function MainPage() {
@@ -65,7 +70,9 @@ export default function MainPage() {
                                 <div>{Number(item.coefficientSR).toFixed(3)}</div>
                                 <div>{Number(item.coefficientV).toFixed(3)}</div>
                                 <div>{Number(item.coefficientP).toFixed(3)}</div>
-                                <div>{item.coefficientPZ}</div>
+                                <div>
+                                    {item.coefficientPZ.map(pz => `[${pz.price}, ${pz.coefficientPZ}]`).join(', ')}
+                                </div>
                             </div>
                         ))}
                     </div>

@@ -20,15 +20,16 @@ const getCoefficientSR = async (item_id) => {
         AND item_id = $1
       GROUP BY day
     )
-    SELECT AVG(daily_price) AS coefficientSR
+    SELECT AVG(daily_price) * 0.87 AS coefficientSR
     FROM daily_prices
   `;
   const result = await pool.query(query, [item_id]);
   return result.rows[0]?.coefficientsr;
 };
 
+
 const getCoefficientV = async (item_id) => {
-  const query = `
+const query = `
     WITH daily_prices AS (
       SELECT date_trunc('day', date) AS day, SUM(price * volume) / SUM(volume) AS daily_price
       FROM price_history
@@ -80,6 +81,44 @@ const getCoefficientP = (coefficientS4, coefficientS3) => {
   return (coefficientS4 * 0.87) / coefficientS3;
 };
 
+const getBuyOrders = async (item_id) => {
+  const query = `
+    SELECT price, quantity
+    FROM item_orders
+    WHERE item_id = $1
+      AND order_type = 'buy'
+    ORDER BY price DESC
+  `;
+  const result = await pool.query(query, [item_id]);
+  return result.rows;
+};
+
+const calculatePZCoefficients = (buyOrders, coefficientL, coefficientSR) => {
+  let cumulativeQuantity = 0;
+
+  if (!buyOrders || buyOrders.length === 0 || !coefficientL || !coefficientSR) {
+    return [{ price: 0, coefficientPZ: 0 }];
+  }
+
+  const results = buyOrders.map((order) => {
+    cumulativeQuantity += order.quantity;
+    const coefficientLZ = cumulativeQuantity / coefficientL + 1;
+    const margin1 = coefficientSR / (order.price * 0.87);
+    const margin2 = margin1 - 1;
+    const coefficientPZ = margin2 / coefficientLZ;
+
+    return {
+      price: order.price,
+      coefficientPZ,
+    };
+  });
+
+  const topResults = results.sort((a, b) => b.coefficientPZ - a.coefficientPZ).slice(0, 5);
+
+  return topResults;
+};
+
+
 const calculateCoefficients = async (appid) => {
   const itemsQuery = `
     SELECT id, market_name
@@ -100,7 +139,9 @@ const calculateCoefficients = async (appid) => {
     const coefficientS3 = getCoefficientS3(coefficientS1);
     const coefficientS4 = getCoefficientS4(coefficientS2);
     const coefficientP = getCoefficientP(coefficientS4, coefficientS3);
-    const coefficientPZ = '-';
+
+    const buyOrders = await getBuyOrders(item.id);
+    const topPZCoefficients = await calculatePZCoefficients(buyOrders, coefficientL, coefficientSR);
 
     coefficients.push({
       market_name: item.market_name,
@@ -108,7 +149,7 @@ const calculateCoefficients = async (appid) => {
       coefficientSR,
       coefficientV,
       coefficientP,
-      coefficientPZ,
+      coefficientPZ: topPZCoefficients,
     });
   }
 
