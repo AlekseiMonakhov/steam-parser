@@ -5,7 +5,7 @@ from database import get_db_connection
 
 def init_driver(proxy=None):
     options = Options()
-    options.add_argument('--headless')  
+    options.add_argument('--headless')
     return webdriver.Chrome(options=options)
 
 def fetch_item_nameid(name, appid):
@@ -13,20 +13,41 @@ def fetch_item_nameid(name, appid):
     driver = init_driver()
     url = f'https://steamcommunity.com/market/listings/{appid}/{name}'
     driver.get(url)
-    
+
     try:
         html_content = driver.page_source
-        start_index = html_content.find("ItemActivityTicker.Start(")
-        if start_index != -1:
-            start_index += len("ItemActivityTicker.Start(")
-            end_index = html_content.find(")", start_index)
-            item_nameid = html_content[start_index:end_index].strip()
+
+        item_nameid = extract_item_nameid(html_content)
+        if item_nameid:
             logging.info(f"item_nameid for {name}: {item_nameid}")
             update_item_nameid(name, item_nameid)
         else:
             logging.error(f"item_nameid for {name} not found")
     finally:
         driver.quit()
+
+def extract_item_nameid(html_content):
+    start_marker_1 = "ItemActivityTicker.Start("
+    start_marker_2 = "Market_LoadOrderSpread("
+
+    # Попробуем найти item_nameid с помощью первого маркера
+    start_index = html_content.find(start_marker_1)
+    if start_index != -1:
+        start_index += len(start_marker_1)
+        end_index = html_content.find(")", start_index)
+        item_nameid = html_content[start_index:end_index].strip()
+        return item_nameid
+
+    # Если не найдено, попробуем найти item_nameid с помощью второго маркера
+    start_index = html_content.find(start_marker_2)
+    if start_index != -1:
+        start_index += len(start_marker_2)
+        end_index = html_content.find(")", start_index)
+        item_nameid = html_content[start_index:end_index].strip()
+        return item_nameid
+
+    # Если item_nameid не найдено, вернем None
+    return None
 
 def update_item_nameid(name, item_nameid):
     conn = get_db_connection()
