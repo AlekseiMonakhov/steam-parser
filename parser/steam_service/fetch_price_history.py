@@ -24,6 +24,9 @@ def fetch_price_history():
         'Accept-Language': 'en-US,en;q=0.9'
     })
 
+    batch_size = 100
+    items_processed = 0
+
     for item_id, market_hash_name in items:
         url = f"http://steamcommunity.com/market/pricehistory/?country=KZ&language=english&currency=37&appid=730&market_hash_name={market_hash_name}"
         response = session.get(url)
@@ -40,7 +43,7 @@ def fetch_price_history():
         if isinstance(data, dict) and data.get('success', True):
             for entry in data['prices']:
                 date, price, volume = entry
-                formatted_date = date[:-4] + date[-2:]  # Remove '+0' assuming all dates are GMT+0
+                formatted_date = date[:-4] + date[-2:]
                 cursor.execute('''
                 INSERT INTO price_history (item_id, date, price, volume)
                 SELECT %s, TO_TIMESTAMP(%s, 'Mon DD YYYY HH24'), %s, %s
@@ -48,9 +51,14 @@ def fetch_price_history():
                     SELECT 1 FROM price_history WHERE item_id = %s AND date = TO_TIMESTAMP(%s, 'Mon DD YYYY HH24')
                 )
                 ''', (item_id, formatted_date, price, volume, item_id, formatted_date))
-                logging.info(f"Price history saved for item {item_id} on {formatted_date}: price {price}, volume {volume}")
         else:
             logging.error(f"Failed to fetch or parse price history for item {item_id}. Response: {data}")
+
+        items_processed += 1
+
+        if items_processed % batch_size == 0:
+            conn.commit()
+            logging.info(f"Committed batch of {batch_size} items.")
 
     conn.commit()
     cursor.close()
