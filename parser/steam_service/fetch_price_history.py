@@ -24,7 +24,7 @@ def fetch_price_history():
         'Accept-Language': 'en-US,en;q=0.9'
     })
 
-    batch_size = 100
+    batch_size = 20
     items_processed = 0
 
     for item_id, market_hash_name in items:

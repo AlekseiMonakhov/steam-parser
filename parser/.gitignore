@@ -1,2 +1,4 @@
 /__pycache__
 steam_service/__pycache__
+.env
+.idea/

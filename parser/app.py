@@ -22,6 +22,12 @@ def items(appid):
     run_service(appid)
     return jsonify({"status": "Completed processing items"}), 200
 
+@app.route('/fetch-nameid/<int:appid>')
+def fetch_nameid(appid):
+    parser = ItemNameIdParser()
+    parser.fetch_item_nameids(appid)
+    return jsonify({"status": "Completed processing name IDs"}), 200
+
 def scheduled_tasks():
     for appid in APP_IDS:
         run_service(appid)

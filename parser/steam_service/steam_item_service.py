@@ -2,7 +2,7 @@ import logging
 import requests
 from .utils import load_proxies
 from .save_items_to_db import save_items_to_db
-from .fetch_item_nameid import fetch_item_nameid
+from .fetch_item_nameid import ItemNameIdParser
 from .fetch_price_history import fetch_price_history
 from .fetch_order_data import fetch_order_data
 
@@ -11,9 +11,8 @@ class SteamItemService:
         self.api_key = api_key
         self.appid = appid
         self.base_url = 'https://steamcommunity.com/market/search/render/'
-        self.proxies = load_proxies()
         logging.info("Service initialized.")
-        
+
     def get_steam_items(self):
         logging.info("Fetching Steam items...")
         params = {
@@ -39,8 +38,9 @@ class SteamItemService:
 
     def run(self):
         items = self.get_steam_items()
-        save_items_to_db(items)
-        for item in items:
-            fetch_item_nameid(item['name'], self.appid)
+        if items:
+            save_items_to_db(items)
+        parser = ItemNameIdParser()
+        parser.fetch_item_nameids(self.appid)
         fetch_price_history()
         fetch_order_data(self.appid)
