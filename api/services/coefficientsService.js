@@ -113,7 +113,7 @@ const calculatePZCoefficients = (buyOrders, coefficientL, coefficientSR) => {
     };
   });
 
-  const topResults = results.sort((a, b) => b.coefficientPZ - a.coefficientPZ).slice(0, 5);
+  const topResults = results.sort((a, b) => b.coefficientPZ - a.coefficientPZ).slice(0, 3);
 
   return topResults;
 };

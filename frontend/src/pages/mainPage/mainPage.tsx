@@ -2,26 +2,20 @@ import React, { useState, useEffect } from 'react';
 import styles from './mainPage.module.css';
 import Pagination from '@mui/material/Pagination';
 import CircularProgress from '@mui/material/CircularProgress';
-
-interface PZCoefficient {
-    price: string;
-    coefficientPZ: number;
-}
-
-interface Item {
-    market_name: string;
-    coefficientL: number;
-    coefficientSR: number;
-    coefficientV: number;
-    coefficientP: number;
-    coefficientPZ: PZCoefficient[];
-}
+import Modal from '@mui/material/Modal';
+import IconButton from '@mui/material/IconButton';
+import ChartIcon from '@mui/icons-material/BarChart';
+import Chart from '../../components/chart/chart';
+import { Item, PZCoefficient } from "./types";
 
 export default function MainPage() {
     const [data, setData] = useState<Item[]>([]);
     const [loading, setLoading] = useState(true);
     const [currentPage, setCurrentPage] = useState(1);
-    const itemsPerPage = 10;
+    const [open, setOpen] = useState(false);
+    const [selectedPZ, setSelectedPZ] = useState<PZCoefficient[]>([]);
+    const [selectedItemName, setSelectedItemName] = useState<string>('');
+    const itemsPerPage = 9;
 
     const fetchData = () => {
         fetch('http://localhost:3008/api/coefficients/730')
@@ -43,6 +37,16 @@ export default function MainPage() {
 
     const handlePageChange = (_event: React.ChangeEvent<unknown>, value: number) => {
         setCurrentPage(value);
+    };
+
+    const handleOpen = (pzData: PZCoefficient[], itemName: string) => {
+        setSelectedPZ(pzData);
+        setSelectedItemName(itemName);
+        setOpen(true);
+    };
+
+    const handleClose = () => {
+        setOpen(false);
     };
 
     const currentData = data.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
@@ -71,7 +75,9 @@ export default function MainPage() {
                                 <div>{Number(item.coefficientV).toFixed(3)}</div>
                                 <div>{Number(item.coefficientP).toFixed(3)}</div>
                                 <div>
-                                    {item.coefficientPZ.map(pz => `[${pz.price}, ${pz.coefficientPZ}]`).join(', ')}
+                                    <IconButton onClick={() => handleOpen(item.coefficientPZ, item.market_name)}>
+                                        <ChartIcon />
+                                    </IconButton>
                                 </div>
                             </div>
                         ))}
@@ -84,6 +90,11 @@ export default function MainPage() {
                     className={styles.pagination}
                 />
             </header>
+            <Modal open={open} onClose={handleClose}>
+                <div className={styles.modalContent}>
+                    <Chart data={selectedPZ} itemName={selectedItemName} />
+                </div>
+            </Modal>
         </div>
     );
 }
