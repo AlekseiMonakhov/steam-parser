@@ -74,9 +74,6 @@ const getCoefficientS4 = (coefficientS2) => {
 };
 
 const getCoefficientP = (coefficientS4, coefficientS3) => {
-  if (coefficientS3 === 0) {
-    return 0;
-  }
   return (coefficientS4 * 0.87) / coefficientS3;
 };
 
@@ -115,8 +112,8 @@ const calculatePZCoefficients = (buyOrders, coefficientL, coefficientSR) => {
 
   const results = buyOrders.map((order) => {
     cumulativeQuantity += order.quantity;
-    const coefficientLZ = cumulativeQuantity / coefficientL + 1;
-    const margin1 = coefficientSR / (order.price * 0.87);
+    const coefficientLZ = ( cumulativeQuantity / coefficientL ) + 1;
+    const margin1 = coefficientSR / order.price;
     const margin2 = margin1 - 1;
     const coefficientPZ = margin2 / coefficientLZ;
 
