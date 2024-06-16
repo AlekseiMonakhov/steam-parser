@@ -11,7 +11,7 @@ load_dotenv()
 
 app = Flask(__name__)
 
-APP_IDS = [730]
+APP_IDS = [730, 570, 578780]
 
 def run_service(appid):
     service = SteamItemService(Config.API_KEY, appid)
@@ -34,7 +34,7 @@ def scheduled_tasks():
 
 if __name__ == "__main__":
     scheduler = BackgroundScheduler()
-    scheduler.add_job(scheduled_tasks, 'interval', hours=12)
+    scheduler.add_job(scheduled_tasks, 'interval', hours=2)
     scheduler.start()
 
     scheduled_tasks()

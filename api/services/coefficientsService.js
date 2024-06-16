@@ -27,9 +27,8 @@ const getCoefficientSR = async (item_id) => {
   return result.rows[0]?.coefficientsr;
 };
 
-
 const getCoefficientV = async (item_id) => {
-const query = `
+  const query = `
     WITH daily_prices AS (
       SELECT date_trunc('day', date) AS day, SUM(price * volume) / SUM(volume) AS daily_price
       FROM price_history
@@ -82,14 +81,28 @@ const getCoefficientP = (coefficientS4, coefficientS3) => {
 };
 
 const getBuyOrders = async (item_id) => {
-  const query = `
+  let query = `
     SELECT price, quantity
     FROM item_orders
     WHERE item_id = $1
       AND order_type = 'buy'
+      AND date = CURRENT_DATE
     ORDER BY price DESC
   `;
-  const result = await pool.query(query, [item_id]);
+  let result = await pool.query(query, [item_id]);
+
+  if (result.rows.length === 0) {
+    query = `
+      SELECT price, quantity
+      FROM item_orders
+      WHERE item_id = $1
+        AND order_type = 'buy'
+        AND date = CURRENT_DATE - INTERVAL '1 day'
+      ORDER BY price DESC
+    `;
+    result = await pool.query(query, [item_id]);
+  }
+
   return result.rows;
 };
 
@@ -118,7 +131,6 @@ const calculatePZCoefficients = (buyOrders, coefficientL, coefficientSR) => {
   return topResults;
 };
 
-
 const calculateCoefficients = async (appid) => {
   const itemsQuery = `
     SELECT id, market_name
@@ -141,7 +153,7 @@ const calculateCoefficients = async (appid) => {
     const coefficientP = getCoefficientP(coefficientS4, coefficientS3);
 
     const buyOrders = await getBuyOrders(item.id);
-    const topPZCoefficients = await calculatePZCoefficients(buyOrders, coefficientL, coefficientSR);
+    const topPZCoefficients = calculatePZCoefficients(buyOrders, coefficientL, coefficientSR);
 
     coefficients.push({
       market_name: item.market_name,

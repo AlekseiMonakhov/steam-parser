@@ -51,5 +51,6 @@ CREATE TABLE IF NOT EXISTS item_orders (
     order_type VARCHAR(50) NOT NULL, 
     price NUMERIC(10, 3) NOT NULL,
     quantity INTEGER NOT NULL,
+    date DATE,
     CONSTRAINT fk_item FOREIGN KEY (item_id) REFERENCES steam_items(id)
 );
