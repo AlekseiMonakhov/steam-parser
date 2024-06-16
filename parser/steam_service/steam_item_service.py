@@ -1,5 +1,6 @@
 import logging
 import requests
+from concurrent.futures import ThreadPoolExecutor
 from .utils import load_proxies
 from .save_items_to_db import save_items_to_db
 from .fetch_item_nameid import ItemNameIdParser
@@ -37,10 +38,12 @@ class SteamItemService:
         return []
 
     def run(self):
-        items = self.get_steam_items()
-        if items:
-            save_items_to_db(items)
-        parser = ItemNameIdParser()
-        parser.fetch_item_nameids(self.appid)
-        fetch_price_history()
-        fetch_order_data(self.appid)
+        with ThreadPoolExecutor() as executor:
+            future_items = executor.submit(self.get_steam_items)
+            future_save_items = future_items.result()
+            if future_save_items:
+                executor.submit(save_items_to_db, future_save_items)
+            parser = ItemNameIdParser()
+            executor.submit(parser.fetch_item_nameids, self.appid)
+            executor.submit(fetch_price_history)
+            executor.submit(fetch_order_data, self.appid)

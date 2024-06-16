@@ -34,7 +34,7 @@ def scheduled_tasks():
 
 if __name__ == "__main__":
     scheduler = BackgroundScheduler()
-    scheduler.add_job(scheduled_tasks, 'interval', hours=2)
+    scheduler.add_job(scheduled_tasks, 'interval', hours=1)
     scheduler.start()
 
     scheduled_tasks()
