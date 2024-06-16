@@ -110,7 +110,7 @@ const calculatePZCoefficients = (buyOrders, coefficientL, coefficientSR) => {
   let cumulativeQuantity = 0;
 
   if (!buyOrders || buyOrders.length === 0 || !coefficientL || !coefficientSR) {
-    return [{ price: 0, coefficientPZ: 0 }];
+    return { topCoefficientPZ: { price: 0, coefficientPZ: 0 }, top20PZCoefficients: [] };
   }
 
   const results = buyOrders.map((order) => {
@@ -126,9 +126,11 @@ const calculatePZCoefficients = (buyOrders, coefficientL, coefficientSR) => {
     };
   });
 
-  const topResults = results.sort((a, b) => b.coefficientPZ - a.coefficientPZ).slice(0, 3);
+  const topResults = results.sort((a, b) => b.coefficientPZ - a.coefficientPZ);
+  const topCoefficientPZ = topResults[0];
+  const top20PZCoefficients = topResults.slice(0, 20);
 
-  return topResults;
+  return { topCoefficientPZ, top20PZCoefficients };
 };
 
 const calculateCoefficients = async (appid) => {
@@ -153,7 +155,7 @@ const calculateCoefficients = async (appid) => {
     const coefficientP = getCoefficientP(coefficientS4, coefficientS3);
 
     const buyOrders = await getBuyOrders(item.id);
-    const topPZCoefficients = calculatePZCoefficients(buyOrders, coefficientL, coefficientSR);
+    const { topCoefficientPZ, top20PZCoefficients } = calculatePZCoefficients(buyOrders, coefficientL, coefficientSR);
 
     coefficients.push({
       market_name: item.market_name,
@@ -161,7 +163,8 @@ const calculateCoefficients = async (appid) => {
       coefficientSR,
       coefficientV,
       coefficientP,
-      coefficientPZ: topPZCoefficients,
+      coefficientPZ: topCoefficientPZ,
+      top20PZCoefficients,
     });
   }
 

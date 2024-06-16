@@ -9,5 +9,6 @@ export interface Item {
     coefficientSR: number;
     coefficientV: number;
     coefficientP: number;
-    coefficientPZ: PZCoefficient[];
+    coefficientPZ: PZCoefficient;
+    top20PZCoefficients: PZCoefficient[];
 }

@@ -49,7 +49,7 @@ export default function MainPage() {
         setOpen(false);
     };
 
-    const currentData = data.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+    const currentData = data.slice((currentPage - 1) * itemsPerPage, (currentPage - 1) * itemsPerPage + itemsPerPage);
 
     return (
         <div className={styles.MainPage}>
@@ -66,6 +66,7 @@ export default function MainPage() {
                             <div>В</div>
                             <div>П</div>
                             <div>ПЗ</div>
+                            <div>График</div>
                         </div>
                         {currentData.map((item, index) => (
                             <div key={index} className={styles.tableRow}>
@@ -74,8 +75,9 @@ export default function MainPage() {
                                 <div>{Number(item.coefficientSR).toFixed(3)}</div>
                                 <div>{Number(item.coefficientV).toFixed(3)}</div>
                                 <div>{Number(item.coefficientP).toFixed(3)}</div>
+                                <div>{Number(item.coefficientPZ.coefficientPZ).toFixed(3)}</div>
                                 <div>
-                                    <IconButton onClick={() => handleOpen(item.coefficientPZ, item.market_name)}>
+                                    <IconButton onClick={() => handleOpen(item.top20PZCoefficients, item.market_name)}>
                                         <ChartIcon />
                                     </IconButton>
                                 </div>
@@ -98,3 +100,5 @@ export default function MainPage() {
         </div>
     );
 }
+
+
