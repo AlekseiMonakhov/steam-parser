@@ -15,7 +15,7 @@ export default function MainPage() {
     const [open, setOpen] = useState(false);
     const [selectedPZ, setSelectedPZ] = useState<PZCoefficient[]>([]);
     const [selectedItemName, setSelectedItemName] = useState<string>('');
-    const itemsPerPage = 9;
+    const itemsPerPage = 8;
 
     const fetchData = () => {
         fetch('http://localhost:3008/api/coefficients/730')
@@ -77,10 +77,10 @@ export default function MainPage() {
                                 <div>{Number(item.coefficientSRN).toFixed(3)}</div>
                                 <div>{Number(item.coefficientV).toFixed(3)}</div>
                                 <div>{Number(item.coefficientP).toFixed(3)}</div>
-                                <div>{Number(item.coefficientPZ.price).toFixed(3)} \ {Number(item.coefficientPZ.coefficientPZ).toFixed(10)}</div>
+                                <div>{Number(item.coefficientPZ.coefficientPZ).toFixed(10)} | {Number(item.coefficientPZ.price).toFixed(3)}</div>
                                 <div>
                                     <IconButton onClick={() => handleOpen(item.top20PZCoefficients, item.market_name)}>
-                                        <ChartIcon />
+                                        <ChartIcon/>
                                     </IconButton>
                                 </div>
                             </div>
