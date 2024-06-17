@@ -206,16 +206,18 @@ class CoefficientCalculator {
       const coefficientP = this.getCoefficientP(coefficientS4, coefficientS3);
       const { topCoefficientPZ, top20PZCoefficients } = this.calculatePZCoefficients(buyOrdersResult, coefficientLResult, coefficientSRResult);
 
-      return {
-        market_name: item.market_name,
-        coefficientL: coefficientLResult,
-        coefficientSR: coefficientSRResult,
-        coefficientSRN: coefficientSRNResult,
-        coefficientV: coefficientVResult,
-        coefficientP,
-        coefficientPZ: topCoefficientPZ,
-        top20PZCoefficients,
-      };
+      if (coefficientSRResult !== 0 && topCoefficientPZ.coefficientPZ !== 0) {
+        return {
+          market_name: item.market_name,
+          coefficientL: coefficientLResult,
+          coefficientSR: coefficientSRResult,
+          coefficientSRN: coefficientSRNResult,
+          coefficientV: coefficientVResult,
+          coefficientP,
+          coefficientPZ: topCoefficientPZ,
+          top20PZCoefficients,
+        };
+      }
     });
 
     const coefficients = (await Promise.all(coefficientPromises)).filter(Boolean);
