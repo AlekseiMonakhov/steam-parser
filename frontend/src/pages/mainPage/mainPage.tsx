@@ -63,6 +63,7 @@ export default function MainPage() {
                             <div>Item</div>
                             <div>Л</div>
                             <div>СР</div>
+                            <div>СРН</div>
                             <div>В</div>
                             <div>П</div>
                             <div>ПЗ</div>
@@ -73,6 +74,7 @@ export default function MainPage() {
                                 <div className={styles.marketName}>{item.market_name}</div>
                                 <div>{item.coefficientL}</div>
                                 <div>{Number(item.coefficientSR).toFixed(3)}</div>
+                                <div>{Number(item.coefficientSRN).toFixed(3)}</div>
                                 <div>{Number(item.coefficientV).toFixed(3)}</div>
                                 <div>{Number(item.coefficientP).toFixed(3)}</div>
                                 <div>{Number(item.coefficientPZ.price).toFixed(3)} \ {Number(item.coefficientPZ.coefficientPZ).toFixed(10)}</div>

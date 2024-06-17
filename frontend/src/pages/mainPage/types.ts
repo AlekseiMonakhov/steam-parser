@@ -7,6 +7,7 @@ export interface Item {
     market_name: string;
     coefficientL: number;
     coefficientSR: number;
+    coefficientSRN: number;
     coefficientV: number;
     coefficientP: number;
     coefficientPZ: PZCoefficient;

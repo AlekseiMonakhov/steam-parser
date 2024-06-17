@@ -29,7 +29,7 @@
 .tableRow {
   align-items: center;
   display: grid;
-  grid-template-columns: 2fr repeat(6, 1fr);
+  grid-template-columns: 2fr repeat(7, 1fr);
   padding: 10px;
   margin-bottom: 10px;
   background-color: #f9f9f9;

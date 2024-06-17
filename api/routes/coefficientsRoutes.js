@@ -1,10 +1,7 @@
 const express = require('express');
 const router = express.Router();
-const { getCoefficients } = require('../controllers/coefficientsController');
+const CoefficientsController = require('../controllers/coefficientsController');
 
-router.get('/coefficients/:appid', (req, res, next) => {
-  console.log(`Handling request for /coefficients/${req.params.appid}`);
-  next();
-}, getCoefficients);
+router.get('/coefficients/:appid', CoefficientsController.getCoefficients);
 
 module.exports = router;
