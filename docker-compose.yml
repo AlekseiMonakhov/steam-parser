@@ -15,6 +15,15 @@ services:
     networks:
       - my-network
 
+  redis:
+    image: redis:latest
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    networks:
+      - my-network
+
   api:
     build:
       context: ./api
@@ -22,12 +31,20 @@ services:
       - "3008:3008"
     environment:
       NODE_ENV: development
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      POSTGRES_HOST: postgres
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: postgres
+      POSTGRES_PORT: 5432
     volumes:
       - ./api:/usr/src/app
       - /usr/src/app/node_modules
     restart: unless-stopped
     depends_on:
       - postgres
+      - redis
     networks:
       - my-network
 
@@ -83,3 +100,4 @@ networks:
 
 volumes:
   postgres-data: {}
+  redis-data: {}

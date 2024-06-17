@@ -1,8 +1,35 @@
 const pool = require('../database/db');
+const client = require('../database/redisClient');
 
 class CoefficientCalculator {
   constructor(appid) {
     this.appid = appid;
+  }
+
+  async cacheGet(key) {
+    try {
+      return await client.get(key);
+    } catch (err) {
+      throw err;
+    }
+  }
+
+  async cacheSet(key, value, expiration = 3600) {
+    try {
+      await client.set(key, value, { EX: expiration });
+    } catch (err) {
+      throw err;
+    }
+  }
+
+  async queryWithCache(key, query, params = []) {
+    const cachedResult = await this.cacheGet(key);
+    if (cachedResult) {
+      return JSON.parse(cachedResult);
+    }
+    const result = await pool.query(query, params);
+    await this.cacheSet(key, JSON.stringify(result.rows));
+    return result.rows;
   }
 
   async getCoefficientL(item_id) {
@@ -12,8 +39,8 @@ class CoefficientCalculator {
       WHERE date >= NOW() - INTERVAL '30 days'
         AND item_id = $1
     `;
-    const result = await pool.query(query, [item_id]);
-    return result.rows[0]?.coefficientl;
+    const result = await this.queryWithCache(`coefficientL:${item_id}`, query, [item_id]);
+    return result[0]?.coefficientl;
   }
 
   async getCoefficientSR(item_id) {
@@ -28,8 +55,8 @@ class CoefficientCalculator {
       SELECT AVG(daily_price) * 0.87 AS coefficientSR
       FROM daily_prices
     `;
-    const result = await pool.query(query, [item_id]);
-    return result.rows[0]?.coefficientsr;
+    const result = await this.queryWithCache(`coefficientSR:${item_id}`, query, [item_id]);
+    return result[0]?.coefficientsr;
   }
 
   async getCoefficientSRN(item_id) {
@@ -44,8 +71,8 @@ class CoefficientCalculator {
       SELECT AVG(daily_price) * 0.87 AS coefficientSRN
       FROM daily_prices
     `;
-    const result = await pool.query(query, [item_id]);
-    return result.rows[0]?.coefficientsrn;
+    const result = await this.queryWithCache(`coefficientSRN:${item_id}`, query, [item_id]);
+    return result[0]?.coefficientsrn;
   }
 
   async getCoefficientV(item_id) {
@@ -60,8 +87,8 @@ class CoefficientCalculator {
       SELECT MAX(daily_price) / MIN(daily_price) AS coefficientV
       FROM daily_prices
     `;
-    const result = await pool.query(query, [item_id]);
-    return result.rows[0]?.coefficientv;
+    const result = await this.queryWithCache(`coefficientV:${item_id}`, query, [item_id]);
+    return result[0]?.coefficientv;
   }
 
   async getCoefficientS1(item_id, coefficientSR) {
@@ -71,8 +98,8 @@ class CoefficientCalculator {
       WHERE price > $1
         AND item_id = $2
     `;
-    const result = await pool.query(query, [coefficientSR, item_id]);
-    return result.rows[0]?.coefficients1;
+    const result = await this.queryWithCache(`coefficientS1:${item_id}:${coefficientSR}`, query, [coefficientSR, item_id]);
+    return result[0]?.coefficients1;
   }
 
   async getCoefficientS2(item_id, coefficientSR) {
@@ -82,8 +109,8 @@ class CoefficientCalculator {
       WHERE price < $1
         AND item_id = $2
     `;
-    const result = await pool.query(query, [coefficientSR, item_id]);
-    return result.rows[0]?.coefficients2;
+    const result = await this.queryWithCache(`coefficientS2:${item_id}:${coefficientSR}`, query, [coefficientSR, item_id]);
+    return result[0]?.coefficients2;
   }
 
   getCoefficientS3(coefficientS1) {
@@ -151,7 +178,7 @@ class CoefficientCalculator {
     return { topCoefficientPZ, top20PZCoefficients };
   }
 
-  async calculateCoefficients() {
+  async calculateAndCacheCoefficients() {
     const itemsQuery = `
       SELECT id, market_name
       FROM steam_items
@@ -161,18 +188,12 @@ class CoefficientCalculator {
     const items = itemsResult.rows;
 
     const coefficientPromises = items.map(async (item) => {
-      const coefficientL = this.getCoefficientL(item.id);
-      const coefficientSR = this.getCoefficientSR(item.id);
-      const coefficientSRN = this.getCoefficientSRN(item.id);
-      const coefficientV = this.getCoefficientV(item.id);
-      const buyOrders = this.getBuyOrders(item.id);
-
       const [coefficientLResult, coefficientSRResult, coefficientSRNResult, coefficientVResult, buyOrdersResult] = await Promise.all([
-        coefficientL,
-        coefficientSR,
-        coefficientSRN,
-        coefficientV,
-        buyOrders
+        this.getCoefficientL(item.id),
+        this.getCoefficientSR(item.id),
+        this.getCoefficientSRN(item.id),
+        this.getCoefficientV(item.id),
+        this.getBuyOrders(item.id)
       ]);
 
       const [coefficientS1, coefficientS2] = await Promise.all([
@@ -185,23 +206,29 @@ class CoefficientCalculator {
       const coefficientP = this.getCoefficientP(coefficientS4, coefficientS3);
       const { topCoefficientPZ, top20PZCoefficients } = this.calculatePZCoefficients(buyOrdersResult, coefficientLResult, coefficientSRResult);
 
-      if (coefficientSRResult !== 0 && topCoefficientPZ.coefficientPZ !== 0) {
-        return {
-          market_name: item.market_name,
-          coefficientL: coefficientLResult,
-          coefficientSR: coefficientSRResult,
-          coefficientSRN: coefficientSRNResult,
-          coefficientV: coefficientVResult,
-          coefficientP,
-          coefficientPZ: topCoefficientPZ,
-          top20PZCoefficients,
-        };
-      }
+      return {
+        market_name: item.market_name,
+        coefficientL: coefficientLResult,
+        coefficientSR: coefficientSRResult,
+        coefficientSRN: coefficientSRNResult,
+        coefficientV: coefficientVResult,
+        coefficientP,
+        coefficientPZ: topCoefficientPZ,
+        top20PZCoefficients,
+      };
     });
 
     const coefficients = (await Promise.all(coefficientPromises)).filter(Boolean);
-
+    await this.cacheSet(`coefficients:${this.appid}`, JSON.stringify(coefficients));
     return coefficients;
+  }
+
+  async calculateCoefficients() {
+    const cachedResult = await this.cacheGet(`coefficients:${this.appid}`);
+    if (cachedResult) {
+      return JSON.parse(cachedResult);
+    }
+    return this.calculateAndCacheCoefficients();
   }
 }
 
