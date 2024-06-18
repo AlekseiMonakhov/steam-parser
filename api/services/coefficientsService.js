@@ -125,31 +125,34 @@ class CoefficientCalculator {
     return (coefficientS4 * 0.87) / coefficientS3;
   }
 
-  async getBuyOrders(item_id) {
+  async getBuyOrders(item_id, coefficientSR) {
     let query = `
+    SELECT price, quantity
+    FROM item_orders
+    WHERE item_id = $1
+      AND order_type = 'buy'
+      AND date = CURRENT_DATE
+      AND price >= $2
+    ORDER BY price DESC
+  `;
+    let result = await pool.query(query, [item_id, coefficientSR * 0.5]);
+
+    if (result.rows.length === 0) {
+      query = `
       SELECT price, quantity
       FROM item_orders
       WHERE item_id = $1
         AND order_type = 'buy'
-        AND date = CURRENT_DATE
+        AND date = CURRENT_DATE - INTERVAL '1 day'
+        AND price >= $2
       ORDER BY price DESC
     `;
-    let result = await pool.query(query, [item_id]);
-
-    if (result.rows.length === 0) {
-      query = `
-        SELECT price, quantity
-        FROM item_orders
-        WHERE item_id = $1
-          AND order_type = 'buy'
-          AND date = CURRENT_DATE - INTERVAL '1 day'
-        ORDER BY price DESC
-      `;
-      result = await pool.query(query, [item_id]);
+      result = await pool.query(query, [item_id, coefficientSR * 0.5]);
     }
 
     return result.rows;
   }
+
 
   calculatePZCoefficients(buyOrders, coefficientL, coefficientSR) {
     let cumulativeQuantity = 0;
@@ -172,7 +175,7 @@ class CoefficientCalculator {
 
     const topResults = results.sort((a, b) => b.coefficientPZ - a.coefficientPZ);
     const topCoefficientPZ = topResults[0];
-    const top20PZCoefficients = topResults;
+    const top20PZCoefficients = topResults.slice(0, 20);
 
     return { topCoefficientPZ, top20PZCoefficients };
   }
@@ -187,13 +190,14 @@ class CoefficientCalculator {
     const items = itemsResult.rows;
 
     const coefficientPromises = items.map(async (item) => {
-      const [coefficientLResult, coefficientSRResult, coefficientSRNResult, coefficientVResult, buyOrdersResult] = await Promise.all([
+      const [coefficientLResult, coefficientSRResult, coefficientSRNResult, coefficientVResult] = await Promise.all([
         this.getCoefficientL(item.id),
         this.getCoefficientSR(item.id),
         this.getCoefficientSRN(item.id),
         this.getCoefficientV(item.id),
-        this.getBuyOrders(item.id)
       ]);
+
+      const buyOrdersResult = await this.getBuyOrders(item.id, coefficientSRResult);
 
       const [coefficientS1, coefficientS2] = await Promise.all([
         this.getCoefficientS1(item.id, coefficientSRResult),
@@ -205,7 +209,7 @@ class CoefficientCalculator {
       const coefficientP = this.getCoefficientP(coefficientS4, coefficientS3);
       const { topCoefficientPZ, top20PZCoefficients } = this.calculatePZCoefficients(buyOrdersResult, coefficientLResult, coefficientSRResult);
 
-      // if (coefficientSRResult !== 0 && topCoefficientPZ.coefficientPZ !== 0) {
+      if (coefficientSRResult !== 0 && topCoefficientPZ.coefficientPZ !== 0) {
         return {
           market_name: item.market_name,
           coefficientL: coefficientLResult,
@@ -216,8 +220,9 @@ class CoefficientCalculator {
           coefficientPZ: topCoefficientPZ,
           top20PZCoefficients,
         };
-      // }
+      }
     });
+
 
     const coefficients = (await Promise.all(coefficientPromises)).filter(Boolean);
     await this.cacheSet(`coefficients:${this.appid}`, JSON.stringify(coefficients));
