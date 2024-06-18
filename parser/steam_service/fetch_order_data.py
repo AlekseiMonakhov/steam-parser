@@ -34,10 +34,23 @@ def fetch_order_data(appid):
         'Accept-Language': 'en-US,en;q=0.9'
     })
 
+    today = datetime.utcnow().date()
+
     for item_id, item_nameid in items:
         if not item_nameid:
             logging.warning(f"Skipping item with id {item_id} because item_nameid is None")
             continue
+
+        cursor.execute('''
+        SELECT 1 FROM item_orders WHERE item_id = %s AND date = %s
+        ''', (item_id, today))
+
+        if cursor.fetchone():
+            logging.info(f"Orders for item {item_id} already exist for today. Skipping API request.")
+            continue
+
+        referer_url = f"https://steamcommunity.com/market/listings/{appid}/{item_nameid}"
+        session.headers.update({'Referer': referer_url})
 
         url = f"https://steamcommunity.com/market/itemordershistogram?country=KZ&language=english&currency=37&item_nameid={item_nameid}&two_factor=0&norender=1"
         response = session.get(url)
@@ -50,32 +63,19 @@ def fetch_order_data(appid):
             logging.error("Failed to decode JSON from response")
             continue
 
-
         if isinstance(data, dict) and data.get('success', True):
-            today = datetime.utcnow().date()
+#            for order in data.get('sell_order_graph', []):
+#                try:
+#                    price = float(order[0])
+#                    quantity = int(order[1])
+#                    cursor.execute('''
+#                    INSERT INTO item_orders (item_id, order_type, price, quantity, date)
+#                    VALUES (%s, %s, %s, %s, %s)
+#                    ''', (item_id, 'sell', price, quantity, today))
+#                except ValueError as e:
+#                    logging.error(f"Failed to parse sell order for item {item_id}: {e}")
+#                    continue
 
-            cursor.execute('''
-            SELECT 1 FROM item_orders WHERE item_id = %s AND date = %s
-            ''', (item_id, today))
-
-            if cursor.fetchone():
-                logging.info(f"Orders for item {item_id} already exist for today. Skipping insertion.")
-                continue
-
-            # Обработка sell_order_graph
-            for order in data.get('sell_order_graph', []):
-                try:
-                    price = float(order[0])
-                    quantity = int(order[1])
-                    cursor.execute('''
-                    INSERT INTO item_orders (item_id, order_type, price, quantity, date)
-                    VALUES (%s, %s, %s, %s, %s)
-                    ''', (item_id, 'sell', price, quantity, today))
-                except ValueError as e:
-                    logging.error(f"Failed to parse sell order for item {item_id}: {e}")
-                    continue
-
-            # Обработка buy_order_graph
             for order in data.get('buy_order_graph', []):
                 try:
                     price = float(order[0])
