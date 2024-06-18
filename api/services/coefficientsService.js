@@ -14,7 +14,7 @@ class CoefficientCalculator {
     }
   }
 
-  async cacheSet(key, value, expiration = 3600) {
+  async cacheSet(key, value, expiration = 21600) {
     try {
       await client.set(key, value, { EX: expiration });
     } catch (err) {
