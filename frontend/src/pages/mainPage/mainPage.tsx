@@ -1,49 +1,41 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import styles from './mainPage.module.css';
 import Pagination from '@mui/material/Pagination';
 import CircularProgress from '@mui/material/CircularProgress';
 import Modal from '@mui/material/Modal';
-import IconButton from '@mui/material/IconButton';
-import ChartIcon from '@mui/icons-material/BarChart';
-import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
-import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
 import Chart from '../../components/chart/chart';
 import { Item, PZCoefficient } from "./types";
 import { useGameStore } from '../../storage/gameStore';
+import usePagination from '../../hooks/usePagination';
+import DataTable from "../../components/dataTable/dataTable";
 
 export default function MainPage() {
     const [data, setData] = useState<Item[]>([]);
     const [loading, setLoading] = useState(true);
-    const [currentPage, setCurrentPage] = useState(1);
     const [open, setOpen] = useState(false);
     const [selectedPZ, setSelectedPZ] = useState<PZCoefficient[]>([]);
     const [selectedItemName, setSelectedItemName] = useState<string>('');
     const [sortConfig, setSortConfig] = useState<{ key: string, direction: 'asc' | 'desc' }>({ key: '', direction: 'asc' });
-    const itemsPerPage = 9;
+    const { currentPage, handlePageChange, itemsPerPage } = usePagination(9);
     const { gameCode } = useGameStore();
 
-    const fetchData = (gameCode: number) => {
+    const fetchData = async (gameCode: number) => {
         setLoading(true);
-        fetch(`http://localhost:3008/api/coefficients/${gameCode}`)
-            .then(response => response.json())
-            .then(data => {
-                if (data.length > 0) {
-                    setData(data);
-                    setLoading(false);
-                }
-            })
-            .catch(error => {
-                console.error('Error fetching data:', error);
-            });
+        try {
+            const response = await fetch(`http://localhost:3008/api/coefficients/${gameCode}`);
+            const result = await response.json();
+            if (result.length > 0) {
+                setData(result);
+                setLoading(false);
+            }
+        } catch (error) {
+            console.error('Error fetching data:', error);
+        }
     };
 
     useEffect(() => {
         fetchData(gameCode);
     }, [gameCode]);
-
-    const handlePageChange = (_event: React.ChangeEvent<unknown>, value: number) => {
-        setCurrentPage(value);
-    };
 
     const handleOpen = (pzData: PZCoefficient[], itemName: string) => {
         setSelectedPZ(pzData);
@@ -67,23 +59,16 @@ export default function MainPage() {
         setSortConfig({ key, direction });
     };
 
-    const sortedData = React.useMemo(() => {
+    const getValueByKey = (item: Item, key: string): unknown => {
+        return key.split('.').reduce((acc: any, part: string) => acc && acc[part], item);
+    };
+
+    const sortedData = useMemo(() => {
         let sortableData = [...data];
         if (sortConfig.key) {
             sortableData.sort((a, b) => {
-                let aValue, bValue;
-                if (sortConfig.key.includes('.')) {
-                    const keys = sortConfig.key.split('.');
-                    // @ts-ignore
-                    aValue = parseFloat(a[keys[0]][keys[1]]) || 0;
-                    // @ts-ignore
-                    bValue = parseFloat(b[keys[0]][keys[1]]) || 0;
-                } else {
-                    // @ts-ignore
-                    aValue = parseFloat(a[sortConfig.key]) || 0;
-                    // @ts-ignore
-                    bValue = parseFloat(b[sortConfig.key]) || 0;
-                }
+                const aValue = parseFloat(getValueByKey(a, sortConfig.key) as string) || 0;
+                const bValue = parseFloat(getValueByKey(b, sortConfig.key) as string) || 0;
                 if (aValue < bValue) {
                     return sortConfig.direction === 'asc' ? -1 : 1;
                 }
@@ -96,17 +81,7 @@ export default function MainPage() {
         return sortableData;
     }, [data, sortConfig]);
 
-    const currentData = sortedData.slice((currentPage - 1) * itemsPerPage, (currentPage - 1) * itemsPerPage + itemsPerPage);
-
-    const getSortIcon = (key: string) => {
-        if (sortConfig.key !== key) {
-            return <ArrowUpwardIcon className={styles.sortIcon} />;
-        }
-        if (sortConfig.direction === 'asc') {
-            return <ArrowUpwardIcon className={styles.sortIcon} />;
-        }
-        return <ArrowDownwardIcon className={styles.sortIcon} />;
-    };
+    const currentData = sortedData.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
     return (
         <div className={styles.MainPage}>
@@ -114,37 +89,13 @@ export default function MainPage() {
                 {loading ? (
                     <CircularProgress />
                 ) : (
-                    <div className={styles.tableContainer}>
-                        <div className={`${styles.tableRow} ${styles.tableHeader}`}>
-                            <div>Предмет</div>
-                            <div onClick={() => handleSort('coefficientL')}>Л {getSortIcon('coefficientL')}</div>
-                            <div>СР</div>
-                            <div>СРН</div>
-                            <div onClick={() => handleSort('coefficientV')}>В {getSortIcon('coefficientV')}</div>
-                            <div>П</div>
-                            <div onClick={() => handleSort('coefficientPZ.coefficientPZ')}>ПЗ {getSortIcon('coefficientPZ.coefficientPZ')}</div>
-                            <div>График ПЗ</div>
-                        </div>
-                        {currentData.map((item, index) => (
-                            <div key={index} className={styles.tableRow}>
-                                <a href={`https://steamcommunity.com/market/listings/${gameCode}/${item.market_name}`}
-                                   target="_blank" rel="noopener noreferrer" className={styles.marketName}>
-                                    {item.market_name}
-                                </a>
-                                <div>{item.coefficientL}</div>
-                                <div>{Number(item.coefficientSR).toFixed(3)}</div>
-                                <div>{Number(item.coefficientSRN).toFixed(3)}</div>
-                                <div>{Number(item.coefficientV).toFixed(3)}</div>
-                                <div>{Number(item.coefficientP).toFixed(3)}</div>
-                                <div>{Number(item.coefficientPZ.coefficientPZ).toFixed(8)} | {Number(item.coefficientPZ.price).toFixed(3)}</div>
-                                <div>
-                                    <IconButton onClick={() => handleOpen(item.top20PZCoefficients, item.market_name)}>
-                                        <ChartIcon/>
-                                    </IconButton>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
+                    <DataTable
+                        data={currentData}
+                        sortConfig={sortConfig}
+                        handleSort={handleSort}
+                        handleOpen={handleOpen}
+                        gameCode={gameCode}
+                    />
                 )}
                 <Pagination
                     count={Math.ceil(data.length / itemsPerPage)}
