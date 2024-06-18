@@ -16,7 +16,7 @@ export default function MainPage() {
     const [open, setOpen] = useState(false);
     const [selectedPZ, setSelectedPZ] = useState<PZCoefficient[]>([]);
     const [selectedItemName, setSelectedItemName] = useState<string>('');
-    const itemsPerPage = 8;
+    const itemsPerPage = 9;
     const { gameCode } = useGameStore();
 
     const fetchData = (gameCode: number) => {
@@ -57,24 +57,26 @@ export default function MainPage() {
     return (
         <div className={styles.MainPage}>
             <header className={styles.MainPageHeader}>
-                <h1 className={styles.title}>Аналитика</h1>
                 {loading ? (
                     <CircularProgress />
                 ) : (
                     <div className={styles.tableContainer}>
                         <div className={`${styles.tableRow} ${styles.tableHeader}`}>
-                            <div>Item</div>
+                            <div>Предмет</div>
                             <div>Л</div>
                             <div>СР</div>
                             <div>СРН</div>
                             <div>В</div>
                             <div>П</div>
                             <div>ПЗ</div>
-                            <div>График</div>
+                            <div>График ПЗ</div>
                         </div>
                         {currentData.map((item, index) => (
                             <div key={index} className={styles.tableRow}>
-                                <div className={styles.marketName}>{item.market_name}</div>
+                                <a href={`https://steamcommunity.com/market/listings/${gameCode}/${item.market_name}`}
+                                   target="_blank" rel="noopener noreferrer" className={styles.marketName}>
+                                    {item.market_name}
+                                </a>
                                 <div>{item.coefficientL}</div>
                                 <div>{Number(item.coefficientSR).toFixed(3)}</div>
                                 <div>{Number(item.coefficientSRN).toFixed(3)}</div>

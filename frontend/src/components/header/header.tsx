@@ -56,9 +56,12 @@ export default function Header() {
               <MenuItem value={570}>Dota 2</MenuItem>
               <MenuItem value={578080}>PUBG</MenuItem>
             </Select>
-            <Typography variant="h6" sx={{ flexGrow: 1, textAlign: 'center', fontWeight: 'bold', fontSize: '2.5rem', color: 'darkred' }}>
-              ASystems
-            </Typography>
+              <Link to="/" className={styles.link}>
+                  <Typography variant="h6" sx={{ flexGrow: 1, textAlign: 'center', fontWeight: 'bold', fontSize: '2.5rem', color: 'darkred' }}>
+                      ASystems
+                  </Typography>
+              </Link>
+
                        <IconButton
                 size="large"
                 aria-label="account of current user"
