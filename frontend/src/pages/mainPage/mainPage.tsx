@@ -136,7 +136,7 @@ export default function MainPage() {
                                 <div>{Number(item.coefficientSRN).toFixed(3)}</div>
                                 <div>{Number(item.coefficientV).toFixed(3)}</div>
                                 <div>{Number(item.coefficientP).toFixed(3)}</div>
-                                <div>{Number(item.coefficientPZ.coefficientPZ).toFixed(10)}</div>
+                                <div>{Number(item.coefficientPZ.coefficientPZ).toFixed(8)} | {Number(item.coefficientPZ.price).toFixed(3)}</div>
                                 <div>
                                     <IconButton onClick={() => handleOpen(item.top20PZCoefficients, item.market_name)}>
                                         <ChartIcon/>
