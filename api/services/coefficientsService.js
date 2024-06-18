@@ -159,8 +159,7 @@ class CoefficientCalculator {
     }
 
     const results = buyOrders.map((order) => {
-      cumulativeQuantity += order.quantity;
-      const coefficientLZ = (cumulativeQuantity / coefficientL) + 1;
+      const coefficientLZ = (order.quantity / coefficientL) + 1;
       const margin1 = coefficientSR / order.price;
       const margin2 = margin1 - 1;
       const coefficientPZ = margin2 / coefficientLZ;
