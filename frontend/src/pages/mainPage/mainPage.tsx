@@ -7,6 +7,7 @@ import IconButton from '@mui/material/IconButton';
 import ChartIcon from '@mui/icons-material/BarChart';
 import Chart from '../../components/chart/chart';
 import { Item, PZCoefficient } from "./types";
+import { useGameStore } from '../../storage/gameStore';
 
 export default function MainPage() {
     const [data, setData] = useState<Item[]>([]);
@@ -16,9 +17,11 @@ export default function MainPage() {
     const [selectedPZ, setSelectedPZ] = useState<PZCoefficient[]>([]);
     const [selectedItemName, setSelectedItemName] = useState<string>('');
     const itemsPerPage = 8;
+    const { gameCode } = useGameStore();
 
-    const fetchData = () => {
-        fetch('http://localhost:3008/api/coefficients/730')
+    const fetchData = (gameCode: number) => {
+        setLoading(true);
+        fetch(`http://localhost:3008/api/coefficients/${gameCode}`)
             .then(response => response.json())
             .then(data => {
                 if (data.length > 0) {
@@ -32,8 +35,8 @@ export default function MainPage() {
     };
 
     useEffect(() => {
-        fetchData();
-    }, []);
+        fetchData(gameCode);
+    }, [gameCode]);
 
     const handlePageChange = (_event: React.ChangeEvent<unknown>, value: number) => {
         setCurrentPage(value);
@@ -102,5 +105,3 @@ export default function MainPage() {
         </div>
     );
 }
-
-
