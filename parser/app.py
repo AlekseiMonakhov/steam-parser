@@ -11,7 +11,7 @@ load_dotenv()
 
 app = Flask(__name__)
 
-APP_IDS = [730, 570, 578780]
+APP_IDS = [578080, 570, 730]
 
 def run_service(appid):
     service = SteamItemService(Config.API_KEY, appid)
@@ -21,12 +21,6 @@ def run_service(appid):
 def items(appid):
     run_service(appid)
     return jsonify({"status": "Completed processing items"}), 200
-
-@app.route('/fetch-nameid/<int:appid>')
-def fetch_nameid(appid):
-    parser = ItemNameIdParser()
-    parser.fetch_item_nameids(appid)
-    return jsonify({"status": "Completed processing name IDs"}), 200
 
 def scheduled_tasks():
     for appid in APP_IDS:

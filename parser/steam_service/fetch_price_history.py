@@ -3,7 +3,7 @@ import requests
 from database import get_db_connection
 from config import Config
 
-def fetch_price_history():
+def fetch_price_history(appid):
     conn = get_db_connection()
     cursor = conn.cursor()
     cursor.execute("SELECT id, market_hash_name FROM steam_items WHERE market_hash_name IS NOT NULL")
@@ -28,10 +28,10 @@ def fetch_price_history():
     items_processed = 0
 
     for item_id, market_hash_name in items:
-        url = f"http://steamcommunity.com/market/pricehistory/?country=KZ&language=english&currency=37&appid=730&market_hash_name={market_hash_name}"
+        url = f"http://steamcommunity.com/market/pricehistory/?country=KZ&language=english&currency=37&appid={appid}&market_hash_name={market_hash_name}"
         response = session.get(url)
         logging.info(f"URL: {url}")
-        logging.info(f"Response Status Code: {response.status_code}, Response Body: {response.text}")
+        logging.info(f"Response Status Code: {response.status_code}")
 
         try:
             data = response.json()
@@ -39,7 +39,6 @@ def fetch_price_history():
             logging.error("Failed to decode JSON from response")
             continue
 
-        logging.info(f"Response from API for {market_hash_name}: {data}")
         if isinstance(data, dict) and data.get('success', True):
             for entry in data['prices']:
                 date, price, volume = entry

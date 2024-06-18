@@ -45,5 +45,6 @@ class SteamItemService:
                 executor.submit(save_items_to_db, future_save_items)
             parser = ItemNameIdParser()
             executor.submit(parser.fetch_item_nameids, self.appid)
-            executor.submit(fetch_price_history)
             executor.submit(fetch_order_data, self.appid)
+            executor.submit(fetch_price_history, self.appid)
+

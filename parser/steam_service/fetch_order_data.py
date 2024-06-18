@@ -9,7 +9,6 @@ def fetch_order_data(appid):
     conn = get_db_connection()
     cursor = conn.cursor()
 
-    # Добавляем колонку date, если ее нет
     cursor.execute("""
     ALTER TABLE item_orders
     ADD COLUMN IF NOT EXISTS date DATE;
@@ -43,7 +42,7 @@ def fetch_order_data(appid):
         url = f"https://steamcommunity.com/market/itemordershistogram?country=KZ&language=english&currency=37&item_nameid={item_nameid}&two_factor=0&norender=1"
         response = session.get(url)
         logging.info(f"URL: {url}")
-        logging.info(f"Response Status Code: {response.status_code}, Response Body: {response.text}")
+        logging.info(f"Response Status Code: {response.status_code}")
 
         try:
             data = response.json()
@@ -51,13 +50,10 @@ def fetch_order_data(appid):
             logging.error("Failed to decode JSON from response")
             continue
 
-        logging.info(f"Response from API for item_nameid {item_nameid}: {data}")
 
         if isinstance(data, dict) and data.get('success', True):
-            # Текущая дата
             today = datetime.utcnow().date()
 
-            # Проверяем наличие записей за текущий день
             cursor.execute('''
             SELECT 1 FROM item_orders WHERE item_id = %s AND date = %s
             ''', (item_id, today))
@@ -75,7 +71,6 @@ def fetch_order_data(appid):
                     INSERT INTO item_orders (item_id, order_type, price, quantity, date)
                     VALUES (%s, %s, %s, %s, %s)
                     ''', (item_id, 'sell', price, quantity, today))
-                    logging.info(f"Sell order saved for item {item_id}: price {price}, quantity {quantity}")
                 except ValueError as e:
                     logging.error(f"Failed to parse sell order for item {item_id}: {e}")
                     continue
@@ -89,7 +84,6 @@ def fetch_order_data(appid):
                     INSERT INTO item_orders (item_id, order_type, price, quantity, date)
                     VALUES (%s, %s, %s, %s, %s)
                     ''', (item_id, 'buy', price, quantity, today))
-                    logging.info(f"Buy order saved for item {item_id}: price {price}, quantity {quantity}")
                 except ValueError as e:
                     logging.error(f"Failed to parse buy order for item {item_id}: {e}")
                     continue
