@@ -150,8 +150,22 @@ class CoefficientCalculator {
       result = await pool.query(query, [item_id, coefficientSR * 0.5]);
     }
 
+    if (result.rows.length === 0) {
+      query = `
+      SELECT price, quantity
+      FROM item_orders
+      WHERE item_id = $1
+        AND order_type = 'buy'
+        AND date = CURRENT_DATE - INTERVAL '2 days'
+        AND price >= $2
+      ORDER BY price DESC
+    `;
+      result = await pool.query(query, [item_id, coefficientSR * 0.5]);
+    }
+
     return result.rows;
   }
+
 
 
   calculatePZCoefficients(buyOrders, coefficientL, coefficientSR) {
