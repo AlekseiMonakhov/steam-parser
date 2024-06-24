@@ -24,27 +24,30 @@ class SteamItemService:
             'sort_dir': 'desc',
             'norender': 1
         }
-        response = requests.get(self.base_url, params=params)
-        if response.status_code == 200:
-            try:
-                data = response.json()
-                items = data.get('results', [])
-                logging.info(f"{len(items)} items fetched.")
-                return items
-            except ValueError:
-                logging.error("Invalid JSON response")
-        else:
-            logging.error(f"Failed to fetch items. Status code: {response.status_code}")
-        return []
+        try:
+            response = requests.get(self.base_url, params=params)
+            response.raise_for_status()
+            data = response.json()
+            items = data.get('results', [])
+            logging.info(f"{len(items)} items fetched.")
+            return items
+        except requests.RequestException as e:
+            logging.error(f"Failed to fetch items: {e}")
+            return []
+        except ValueError:
+            logging.error("Invalid JSON response")
+            return []
 
     def run(self):
         with ThreadPoolExecutor() as executor:
-            future_items = executor.submit(self.get_steam_items)
-            future_save_items = future_items.result()
-            if future_save_items:
-                executor.submit(save_items_to_db, future_save_items)
-            parser = ItemNameIdParser()
-            executor.submit(parser.fetch_item_nameids, self.appid)
-            executor.submit(fetch_order_data, self.appid)
-            executor.submit(fetch_price_history, self.appid)
-
+            try:
+                future_items = executor.submit(self.get_steam_items)
+                items = future_items.result()
+                if items:
+                    executor.submit(save_items_to_db, items)
+                parser = ItemNameIdParser()
+                executor.submit(parser.fetch_item_nameids, self.appid)
+                executor.submit(fetch_order_data, self.appid)
+                executor.submit(fetch_price_history, self.appid)
+            except Exception as e:
+                logging.error(f"Error in service run: {e}")

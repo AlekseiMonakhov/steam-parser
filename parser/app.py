@@ -2,8 +2,15 @@ import logging
 from flask import Flask, jsonify
 from dotenv import load_dotenv
 from steam_service.steam_item_service import SteamItemService
+from steam_service.fetch_item_nameid import ItemNameIdParser
+from steam_service.fetch_order_data import fetch_order_data
+from steam_service.fetch_price_history import fetch_price_history
+from steam_service.save_items_to_db import save_items_to_db
 from config import Config
 from apscheduler.schedulers.background import BackgroundScheduler
+from apscheduler.triggers.interval import IntervalTrigger
+from apscheduler.triggers.date import DateTrigger
+import datetime
 
 logging.basicConfig(level=logging.INFO)
 
@@ -11,26 +18,48 @@ load_dotenv()
 
 app = Flask(__name__)
 
-APP_IDS = [578080, 570, 730]
+APP_IDS = [730, 530, 578080]
 
 def run_service(appid):
     service = SteamItemService(Config.API_KEY, appid)
-    service.run()
+    items = service.get_steam_items()
+    if items:
+        save_items_to_db(items)
 
 @app.route('/items/<int:appid>')
 def items(appid):
     run_service(appid)
     return jsonify({"status": "Completed processing items"}), 200
 
-def scheduled_tasks():
-    for appid in APP_IDS:
-        run_service(appid)
-
-if __name__ == "__main__":
+def schedule_tasks():
     scheduler = BackgroundScheduler()
-    scheduler.add_job(scheduled_tasks, 'interval', hours=3)
+
+    # Запуск get_steam_items и последующего сохранения в БД для всех appid
+    for appid in APP_IDS:
+        scheduler.add_job(run_service, args=[appid], trigger=DateTrigger(run_date=datetime.datetime.now()))
+        scheduler.add_job(run_service, args=[appid], trigger=IntervalTrigger(hours=12))
+
+    # Запуск fetch_item_nameids для каждого appid по очереди
+    for appid in APP_IDS:
+        scheduler.add_job(ItemNameIdParser().fetch_item_nameids, args=[appid], trigger=DateTrigger(run_date=datetime.datetime.now() + datetime.timedelta(seconds=10)))
+
+    # Запуск fetch_order_data для каждого appid с интервалом в 12 часов и начальным запуском
+    scheduler.add_job(fetch_order_data, args=[730], trigger=DateTrigger(run_date=datetime.datetime.now()))
+    scheduler.add_job(fetch_order_data, args=[730], trigger=IntervalTrigger(hours=12))
+
+    scheduler.add_job(fetch_order_data, args=[570], trigger=DateTrigger(run_date=datetime.datetime.now() + datetime.timedelta(hours=1)))
+    scheduler.add_job(fetch_order_data, args=[570], trigger=IntervalTrigger(hours=12, start_date=datetime.datetime.now() + datetime.timedelta(hours=1)))
+
+    scheduler.add_job(fetch_order_data, args=[578080], trigger=DateTrigger(run_date=datetime.datetime.now() + datetime.timedelta(hours=2)))
+    scheduler.add_job(fetch_order_data, args=[578080], trigger=IntervalTrigger(hours=12, start_date=datetime.datetime.now() + datetime.timedelta(hours=2)))
+
+    # Запуск fetch_price_history с интервалом в 6 часов
+    for appid in APP_IDS:
+        scheduler.add_job(fetch_price_history, args=[appid], trigger=DateTrigger(run_date=datetime.datetime.now()))
+        scheduler.add_job(fetch_price_history, args=[appid], trigger=IntervalTrigger(hours=6))
+
     scheduler.start()
 
-    scheduled_tasks()
-
+if __name__ == "__main__":
+    schedule_tasks()
     app.run(host='0.0.0.0', port=5000)
