@@ -10,14 +10,12 @@ import usePagination from '../../hooks/usePagination';
 import DataTable from "../../components/dataTable/dataTable";
 
 export default function MainPage() {
-    const [data, setData] = useState<Item[]>([]);
-    const [loading, setLoading] = useState(true);
+    const { data, loading, setData, setLoading, gameCode } = useGameStore();
     const [open, setOpen] = useState(false);
     const [selectedPZ, setSelectedPZ] = useState<PZCoefficient[]>([]);
     const [selectedItemName, setSelectedItemName] = useState<string>('');
     const [sortConfig, setSortConfig] = useState<{ key: string, direction: 'asc' | 'desc' }>({ key: '', direction: 'asc' });
     const { currentPage, handlePageChange, itemsPerPage } = usePagination(9);
-    const { gameCode } = useGameStore();
 
     const fetchData = async (gameCode: number) => {
         setLoading(true);
@@ -30,6 +28,7 @@ export default function MainPage() {
             }
         } catch (error) {
             console.error('Error fetching data:', error);
+            setLoading(false);
         }
     };
 
