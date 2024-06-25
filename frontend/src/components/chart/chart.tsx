@@ -1,11 +1,10 @@
 import React from 'react';
-import { Line } from 'react-chartjs-2';
+import { Bar } from 'react-chartjs-2';
 import {
     Chart as ChartJS,
     CategoryScale,
     LinearScale,
-    PointElement,
-    LineElement,
+    BarElement,
     Title,
     Tooltip,
     Legend,
@@ -23,7 +22,7 @@ interface ChartProps {
     itemName: string;
 }
 
-ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend);
+ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
 
 const Chart: React.FC<ChartProps> = ({ data, itemName }) => {
     const chartData = {
@@ -32,17 +31,17 @@ const Chart: React.FC<ChartProps> = ({ data, itemName }) => {
             {
                 label: `${itemName}`,
                 data: data.map(pz => pz.price),
+                backgroundColor: 'rgba(75,192,192,0.6)',
                 borderColor: 'rgba(75,192,192,1)',
-                backgroundColor: 'rgba(75,192,192,0.2)',
-                fill: true,
+                borderWidth: 1,
             },
         ],
     };
 
-    const options: ChartOptions<'line'> = {
+    const options: ChartOptions<'bar'> = {
         scales: {
             x: {
-                type: 'linear',
+                type: 'category',
                 position: 'bottom',
                 title: {
                     display: true,
@@ -60,7 +59,7 @@ const Chart: React.FC<ChartProps> = ({ data, itemName }) => {
 
     return (
         <div className={styles.chartContainer}>
-            <Line data={chartData} options={options} />
+            <Bar data={chartData} options={options} />
         </div>
     );
 };
