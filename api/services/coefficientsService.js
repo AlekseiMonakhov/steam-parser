@@ -167,68 +167,39 @@ class CoefficientCalculator {
       return [];
     }
 
-    const queries = [
-      {
-        text: `
-                SELECT price, quantity
-                FROM item_orders
-                WHERE item_id = $1
-                  AND order_type = 'buy'
-                  AND date = CURRENT_DATE
-                  AND price >= $2
-                ORDER BY price DESC
-            `,
-        params: [item_id, coefficientSR * 0.5]
-      },
-      {
-        text: `
-                SELECT price, quantity
-                FROM item_orders
-                WHERE item_id = $1
-                  AND order_type = 'buy'
-                  AND date = CURRENT_DATE - INTERVAL '1 day'
-                  AND price >= $2
-                ORDER BY price DESC
-            `,
-        params: [item_id, coefficientSR * 0.5]
-      },
-      {
-        text: `
-                SELECT price, quantity
-                FROM item_orders
-                WHERE item_id = $1
-                  AND order_type = 'buy'
-                  AND date = CURRENT_DATE - INTERVAL '2 days'
-                  AND price >= $2
-                ORDER BY price DESC
-            `,
-        params: [item_id, coefficientSR * 0.5]
-      }
-    ];
+    const query = `
+    SELECT price, quantity
+    FROM (
+      SELECT price, quantity, date,
+             MAX(date) OVER (PARTITION BY item_id) as max_date
+      FROM item_orders
+      WHERE item_id = $1
+        AND order_type = 'buy'
+        AND price >= $2
+    ) AS subquery
+    WHERE date = max_date
+    ORDER BY price DESC
+  `;
 
-    const results = await Promise.all(queries.map(async query => {
-      const queryStart = performance.now();
-      const result = await pool.query(query.text, query.params);
-      console.log(`Query execution time: ${performance.now() - queryStart}ms`);
+    const queryStart = performance.now();
+    const result = await pool.query(query, [item_id, coefficientSR * 0.5]);
+    console.log(`Query execution time: ${performance.now() - queryStart}ms`);
+
+    if (result.rows.length > 0) {
+      console.log(`getBuyOrders(${item_id}, ${coefficientSR}): Found orders. Total execution time: ${performance.now() - start}ms`);
       return result.rows;
-    }));
-
-    for (const result of results) {
-      if (result.length > 0) {
-        console.log(`getBuyOrders(${item_id}, ${coefficientSR}): ${performance.now() - start}ms`);
-        return result;
-      }
     }
 
     console.log(`getBuyOrders(${item_id}, ${coefficientSR}): No orders found. Total execution time: ${performance.now() - start}ms`);
     return [];
   }
 
+
   calculatePZCoefficients(buyOrders, coefficientL, coefficientSR) {
     const start = performance.now();
-    let cumulativeQuantity = 0;
 
     if (!buyOrders || buyOrders.length === 0 || !coefficientL || !coefficientSR) {
+      console.log(`buyOrders - ${buyOrders}`);
       console.log(`calculatePZCoefficients: empty data - ${performance.now() - start}ms`);
       return { topCoefficientPZ: { price: 0, coefficientPZ: 0 }, top20PZCoefficients: [] };
     }
@@ -247,10 +218,10 @@ class CoefficientCalculator {
 
     const topResults = results.sort((a, b) => b.coefficientPZ - a.coefficientPZ);
     const topCoefficientPZ = topResults[0];
-    const top20PZCoefficients = topResults.slice(0, 20);
+    const top100PZCoefficients = topResults.slice(0, 100);
 
     console.log(`calculatePZCoefficients: ${performance.now() - start}ms`);
-    return { topCoefficientPZ, top20PZCoefficients };
+    return { topCoefficientPZ, top100PZCoefficients };
   }
 
   async calculateAndCacheCoefficients() {
@@ -281,7 +252,7 @@ class CoefficientCalculator {
       const coefficientS3 = this.getCoefficientS3(coefficientS1);
       const coefficientS4 = this.getCoefficientS4(coefficientS2);
       const coefficientP = this.getCoefficientP(coefficientS4, coefficientS3);
-      const { topCoefficientPZ, top20PZCoefficients } = this.calculatePZCoefficients(buyOrdersResult, coefficientLResult, coefficientSRResult);
+      const { topCoefficientPZ, top100PZCoefficients } = this.calculatePZCoefficients(buyOrdersResult, coefficientLResult, coefficientSRResult);
 
       if (coefficientSRResult !== 0 && topCoefficientPZ.coefficientPZ !== 0) {
         return {
@@ -292,7 +263,7 @@ class CoefficientCalculator {
           coefficientV: coefficientVResult,
           coefficientP,
           coefficientPZ: topCoefficientPZ,
-          top20PZCoefficients,
+          top100PZCoefficients,
         };
       }
     });

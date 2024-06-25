@@ -11,7 +11,7 @@ export interface Item {
     coefficientV: number;
     coefficientP: number;
     coefficientPZ: PZCoefficient;
-    top20PZCoefficients: PZCoefficient[];
+    top100PZCoefficients: PZCoefficient[];
 }
 
 export interface DataTableRowProps {

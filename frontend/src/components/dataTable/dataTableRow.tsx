@@ -4,8 +4,6 @@ import IconButton from '@mui/material/IconButton';
 import ChartIcon from '@mui/icons-material/BarChart';
 import { DataTableRowProps } from "./types";
 
-
-
 const DataTableRow: React.FC<DataTableRowProps> = ({ item, handleOpen, gameCode }) => {
     return (
         <div className={styles.tableRow}>
@@ -18,9 +16,17 @@ const DataTableRow: React.FC<DataTableRowProps> = ({ item, handleOpen, gameCode 
             <div>{Number(item.coefficientSRN).toFixed(3)}</div>
             <div>{Number(item.coefficientV).toFixed(3)}</div>
             <div>{Number(item.coefficientP).toFixed(3)}</div>
-            <div>{Number(item.coefficientPZ.coefficientPZ).toFixed(8)} | {Number(item.coefficientPZ.price).toFixed(3)}</div>
             <div>
-                <IconButton onClick={() => handleOpen(item.top20PZCoefficients, item.market_name)}>
+                {item.coefficientPZ ? (
+                    <>
+                        {Number(item.coefficientPZ.coefficientPZ).toFixed(8)} | {Number(item.coefficientPZ.price).toFixed(3)}
+                    </>
+                ) : (
+                    'N/A'
+                )}
+            </div>
+            <div>
+                <IconButton onClick={() => handleOpen(item.top100PZCoefficients, item.market_name)}>
                     <ChartIcon/>
                 </IconButton>
             </div>
