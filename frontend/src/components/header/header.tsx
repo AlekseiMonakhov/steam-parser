@@ -11,12 +11,16 @@ import Select, { SelectChangeEvent } from '@mui/material/Select';
 import Button from '@mui/material/Button';
 import { useGameStore } from '../../storage/gameStore';
 import styles from './header.module.css';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import {useUserStore} from "../../storage/userStore";
+
 
 export default function Header() {
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
     const [loading, setLoading] = useState(false);
     const { gameCode, setGameCode, setData } = useGameStore();
+    const { user, logout, login } = useUserStore();
+    const navigate = useNavigate();
 
     const handleMenuClick = (event: React.MouseEvent<HTMLButtonElement>) => {
         setAnchorEl(event.currentTarget);
@@ -43,6 +47,23 @@ export default function Header() {
         } finally {
             setLoading(false);
         }
+    };
+
+
+    const handleMenuItemClick = () => {
+        logout();
+        setAnchorEl(null);
+    };
+
+
+    const handleLoginClick = () => {
+        const mockUser = {
+            username: 'mockUser',
+            password: 'mockPassword',
+            role: 'admin',
+        };
+
+        login(mockUser.username);
     };
 
     return (
@@ -101,33 +122,55 @@ export default function Header() {
                             ASystems
                         </Typography>
                     </Link>
-                    <IconButton
-                        size="large"
-                        aria-label="account of current user"
-                        aria-controls="menu-appbar"
-                        aria-haspopup="true"
-                        onClick={handleMenuClick}
-                        color="inherit"
-                    >
-                        <AccountCircle />
-                    </IconButton>
-                    <Menu
-                        id="menu-appbar"
-                        anchorEl={anchorEl}
-                        anchorOrigin={{
-                            vertical: 'top',
-                            horizontal: 'right',
-                        }}
-                        keepMounted
-                        transformOrigin={{
-                            vertical: 'top',
-                            horizontal: 'right',
-                        }}
-                        open={Boolean(anchorEl)}
-                        onClose={handleClose}
-                    >
-                        <MenuItem onClick={handleClose}>Close</MenuItem>
-                    </Menu>
+                    {user ? (
+                        <Box className={styles.MenuButton}>
+                            <IconButton
+                                size="large"
+                                aria-label="account of current user"
+                                aria-controls="menu-appbar"
+                                aria-haspopup="true"
+                                onClick={handleMenuClick}
+                                color="inherit"
+                            >
+                                <AccountCircle />
+                            </IconButton>
+                            <Menu
+                                id="menu-appbar"
+                                anchorEl={anchorEl}
+                                anchorOrigin={{
+                                    vertical: 'top',
+                                    horizontal: 'right',
+                                }}
+                                keepMounted
+                                transformOrigin={{
+                                    vertical: 'top',
+                                    horizontal: 'right',
+                                }}
+                                open={Boolean(anchorEl)}
+                                onClose={handleClose}
+                            >
+                                <MenuItem
+                                    onClick={() => {
+                                        navigate('/');
+                                        handleClose();
+                                    }}
+                                >
+                                    Личный кабинет
+                                </MenuItem>
+                                <MenuItem onClick={handleMenuItemClick}>Выйти</MenuItem>
+                            </Menu>
+                        </Box>
+                    ) : (
+                        <Box className={styles.MenuButton}>
+                            <Button
+                                className={styles.LoggedInButton}
+                                color="inherit"
+                                onClick={handleLoginClick}
+                            >
+                                Login
+                            </Button>
+                        </Box>
+                    )}
                 </Toolbar>
             </AppBar>
         </Box>
