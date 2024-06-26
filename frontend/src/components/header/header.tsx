@@ -14,6 +14,7 @@ import styles from './header.module.css';
 import { Link, useNavigate } from 'react-router-dom';
 import {useUserStore} from "../../storage/userStore";
 
+const api = process.env.REACT_APP_API;
 
 export default function Header() {
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
@@ -37,7 +38,7 @@ export default function Header() {
     const handleRecalculate = async () => {
         setLoading(true);
         try {
-            const response = await fetch(`http://localhost:3008/api/recalculate-coefficients/${gameCode}`);
+            const response = await fetch(`http://${api}:3008/api/recalculate-coefficients/${gameCode}`);
             const result = await response.json();
             if (result.length > 0) {
                 setData(result);

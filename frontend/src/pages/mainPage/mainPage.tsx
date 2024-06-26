@@ -9,6 +9,8 @@ import { useGameStore } from '../../storage/gameStore';
 import usePagination from '../../hooks/usePagination';
 import DataTable from "../../components/dataTable/dataTable";
 
+const api = process.env.REACT_APP_API;
+
 export default function MainPage() {
     const { data, loading, setData, setLoading, gameCode } = useGameStore();
     const [open, setOpen] = useState(false);
@@ -18,9 +20,8 @@ export default function MainPage() {
     const { currentPage, handlePageChange, itemsPerPage } = usePagination(9);
 
     const fetchData = async (gameCode: number) => {
-        setLoading(true);
-        try {
-            const response = await fetch(`http://localhost:3008/api/coefficients/${gameCode}`);
+          try {
+            const response = await fetch(`http://${api}:3008/api/coefficients/${gameCode}`);
             const result = await response.json();
             if (result.length > 0) {
                 setData(result);
