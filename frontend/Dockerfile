@@ -1,4 +1,4 @@
-FROM node:16 AS build
+FROM node:16
 
 WORKDIR /usr/src/frontend
 
@@ -8,6 +8,4 @@ RUN yarn install
 
 COPY . .
 
-RUN yarn global add nodemon
-
-CMD ["nodemon", "--watch", ".", "--exec", "yarn", "start"]
+CMD ["yarn", "start"]
