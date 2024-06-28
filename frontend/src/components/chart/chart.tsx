@@ -25,12 +25,14 @@ interface ChartProps {
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
 
 const Chart: React.FC<ChartProps> = ({ data, itemName }) => {
+    const sortedData = data.sort((a, b) => parseFloat(a.price) - parseFloat(b.price));
+
     const chartData = {
-        labels: data.map(pz => pz.coefficientPZ),
+        labels: sortedData.map(pz => pz.price),
         datasets: [
             {
                 label: `${itemName}`,
-                data: data.map(pz => pz.price),
+                data: sortedData.map(pz => pz.coefficientPZ),
                 backgroundColor: 'rgba(75,192,192,0.6)',
                 borderColor: 'rgba(75,192,192,1)',
                 borderWidth: 1,
@@ -41,17 +43,16 @@ const Chart: React.FC<ChartProps> = ({ data, itemName }) => {
     const options: ChartOptions<'bar'> = {
         scales: {
             x: {
-                type: 'category',
-                position: 'bottom',
-                title: {
-                    display: true,
-                    text: 'Коэффициент ПЗ',
-                },
-            },
-            y: {
                 title: {
                     display: true,
                     text: 'Цена',
+                },
+            },
+            y: {
+                type: 'linear',
+                title: {
+                    display: true,
+                    text: 'Коэффициент ПЗ',
                 },
             },
         },
