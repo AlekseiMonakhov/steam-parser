@@ -8,6 +8,5 @@ COPY . .
 RUN yarn build
 
 FROM alpine:latest
-WORKDIR /usr/share/nginx/html
+WORKDIR /usr/share/frontend
 COPY --from=build /usr/src/frontend/build .
-VOLUME /usr/share/nginx/html
