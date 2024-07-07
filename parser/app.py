@@ -3,6 +3,7 @@ from flask import Flask, jsonify
 from dotenv import load_dotenv
 from steam_service.steam_item_service import SteamItemService
 from steam_service.fetch_item_nameid import ItemNameIdParser
+from steam_service.fetch_rarity_quality_itemgroup import ItemRarityQualityItemgroupParser
 from steam_service.fetch_order_data import fetch_order_data
 from steam_service.fetch_price_history import fetch_price_history
 from steam_service.save_items_to_db import save_items_to_db
@@ -42,6 +43,11 @@ def schedule_tasks():
     # Запуск fetch_item_nameids для каждого appid по очереди
     for appid in APP_IDS:
         scheduler.add_job(ItemNameIdParser().fetch_item_nameids, args=[appid], trigger=DateTrigger(run_date=datetime.datetime.now() + datetime.timedelta(seconds=10)))
+
+    scheduler.add_job(ItemRarityQualityItemgroupParser().fetch_and_update_items, args=[730, 'csgo'], trigger=DateTrigger(run_date=datetime.datetime.now()))
+    scheduler.add_job(ItemRarityQualityItemgroupParser().fetch_and_update_items, args=[730, 'csgo'], trigger=IntervalTrigger(hours=12))
+    scheduler.add_job(ItemRarityQualityItemgroupParser().fetch_and_update_items, args=[570, 'dota'], trigger=DateTrigger(run_date=datetime.datetime.now()))
+    scheduler.add_job(ItemRarityQualityItemgroupParser().fetch_and_update_items, args=[570, 'dota'], trigger=IntervalTrigger(hours=12))
 
     # Запуск fetch_order_data для каждого appid с интервалом в 12 часов и начальным запуском
     scheduler.add_job(fetch_order_data, args=[730], trigger=DateTrigger(run_date=datetime.datetime.now()))
