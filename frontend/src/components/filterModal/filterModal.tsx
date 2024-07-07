@@ -18,12 +18,13 @@ interface FilterModalProps {
     open: boolean;
     onClose: () => void;
     onApplyFilters: (filters: { rarity: string[], quality: string[], itemgroup: string[] }) => void;
+    currentFilters: { rarity: string[], quality: string[], itemgroup: string[] };
 }
 
-const FilterModal: React.FC<FilterModalProps> = ({ open, onClose, onApplyFilters }) => {
-    const [selectedRarity, setSelectedRarity] = useState<string[]>([]);
-    const [selectedQuality, setSelectedQuality] = useState<string[]>([]);
-    const [selectedItemGroup, setSelectedItemGroup] = useState<string[]>([]);
+const FilterModal: React.FC<FilterModalProps> = ({ open, onClose, onApplyFilters, currentFilters }) => {
+    const [selectedRarity, setSelectedRarity] = useState<string[]>(currentFilters.rarity);
+    const [selectedQuality, setSelectedQuality] = useState<string[]>(currentFilters.quality);
+    const [selectedItemGroup, setSelectedItemGroup] = useState<string[]>(currentFilters.itemgroup);
 
     const handleCheckboxChange = (option: string, setSelected: React.Dispatch<React.SetStateAction<string[]>>) => {
         setSelected((prev) => 
@@ -41,12 +42,12 @@ const FilterModal: React.FC<FilterModalProps> = ({ open, onClose, onApplyFilters
     };
 
     useEffect(() => {
-        if (!open) {
-            setSelectedRarity([]);
-            setSelectedQuality([]);
-            setSelectedItemGroup([]);
+        if (open) {
+            setSelectedRarity(currentFilters.rarity);
+            setSelectedQuality(currentFilters.quality);
+            setSelectedItemGroup(currentFilters.itemgroup);
         }
-    }, [open]);
+    }, [open, currentFilters]);
 
     return (
         <Modal open={open} onClose={onClose}>

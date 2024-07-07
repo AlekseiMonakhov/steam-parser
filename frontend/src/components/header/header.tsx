@@ -24,6 +24,7 @@ export default function Header() {
     const { user, logout, login } = useUserStore();
     const navigate = useNavigate();
     const [filterOpen, setFilterOpen] = useState(false); 
+    const [filters, setFilters] = useState<{ rarity: string[], quality: string[], itemgroup: string[] }>({ rarity: [], quality: [], itemgroup: [] });
 
     const handleMenuClick = (event: React.MouseEvent<HTMLButtonElement>) => {
         setAnchorEl(event.currentTarget);
@@ -69,6 +70,11 @@ export default function Header() {
         };
 
         login(mockUser.username);
+    };
+
+    const handleApplyFilters = (filters: { rarity: string[], quality: string[], itemgroup: string[] }) => {
+        setFilters(filters);
+        setFilterOpen(false);
     };
 
     return (
@@ -197,7 +203,12 @@ export default function Header() {
                     )}
                 </Toolbar>
             </AppBar>
-            <FilterModal open={filterOpen} onClose={() => setFilterOpen(false)} /> {/* Модальное окно фильтров */}
+            <FilterModal 
+                open={filterOpen} 
+                onClose={() => setFilterOpen(false)} 
+                onApplyFilters={handleApplyFilters} 
+                currentFilters={filters}
+            />
         </Box>
     );
 }

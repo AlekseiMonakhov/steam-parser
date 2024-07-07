@@ -123,7 +123,12 @@ export default function MainPage() {
                     <Chart data={selectedPZ} itemName={selectedItemName} />
                 </div>
             </Modal>
-            <FilterModal open={filterOpen} onClose={() => setFilterOpen(false)} onApplyFilters={setFilters} />
+            <FilterModal 
+                open={filterOpen} 
+                onClose={() => setFilterOpen(false)} 
+                onApplyFilters={setFilters} 
+                currentFilters={filters}
+            />
         </div>
     );
 }
