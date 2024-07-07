@@ -12,7 +12,7 @@ import Button from '@mui/material/Button';
 import { useGameStore } from '../../storage/gameStore';
 import styles from './header.module.css';
 import { Link, useNavigate } from 'react-router-dom';
-import {useUserStore} from "../../storage/userStore";
+import { useUserStore } from "../../storage/userStore";
 
 const api = process.env.REACT_APP_API;
 
@@ -122,6 +122,29 @@ export default function Header() {
                         <Typography variant="h6" sx={{ flexGrow: 1, textAlign: 'center', fontWeight: 'bold', fontSize: '2.5rem', color: 'darkred' }}>
                             ASystems
                         </Typography>
+                        <Button
+                            // onClick={handleRecalculate}
+                            className={styles.recalculateButton}
+                            sx={{
+                                background: 'linear-gradient(45deg, #2F4F4F 20%, #8B0000 90%)',
+                                border: 0,
+                                borderRadius: 3,
+                                boxShadow: '0 3px 5px 2px rgba(47, 79, 79, .3)',
+                                color: '#FFE4E1',
+                                height: 48,
+                                padding: '0 20px',
+                                textAlign: 'center',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                '&:disabled': {
+                                    background: 'linear-gradient(45deg, #2F4F4F 20%, #8B0000 90%)',
+                                    opacity: 0.5,
+                                }
+                            }}
+                        >
+                            Фильтры
+                        </Button>
                     </Link>
                     {user ? (
                         <Box className={styles.MenuButton}>

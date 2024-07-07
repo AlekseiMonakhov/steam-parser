@@ -254,7 +254,7 @@ class CoefficientCalculator {
       const coefficientP = this.getCoefficientP(coefficientS4, coefficientS3);
       const { topCoefficientPZ, top100PZCoefficients } = this.calculatePZCoefficients(buyOrdersResult, coefficientLResult, coefficientSRResult);
 
-      if (coefficientSRResult !== 0 && topCoefficientPZ.coefficientPZ !== 0) {
+      // if (coefficientSRResult !== 0 && topCoefficientPZ.coefficientPZ !== 0) {
         return {
           market_name: item.market_name,
           coefficientL: coefficientLResult,
@@ -265,7 +265,7 @@ class CoefficientCalculator {
           coefficientPZ: topCoefficientPZ,
           top100PZCoefficients,
         };
-      }
+      // }
     });
 
     const coefficients = (await Promise.all(coefficientPromises)).filter(Boolean);
