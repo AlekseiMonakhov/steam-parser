@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Modal, Box, FormControl, FormGroup, FormControlLabel, Checkbox, Button } from '@mui/material';
 import styles from './filterModal.module.css';
 
@@ -17,53 +17,95 @@ const itemGroupOptions = [
 interface FilterModalProps {
     open: boolean;
     onClose: () => void;
+    onApplyFilters: (filters: { rarity: string[], quality: string[], itemgroup: string[] }) => void;
 }
 
-const renderCheckboxes = (options: string[]) => {
-    const columns = [];
-    for (let i = 0; i < options.length; i += 15) {
-        columns.push(
-            <FormGroup key={i} className={styles.checkboxColumn}>
-                {options.slice(i, i + 10).map((option) => (
-                    <FormControlLabel
-                        key={option}
-                        control={<Checkbox name={option} />}
-                        label={option}
-                    />
-                ))}
-            </FormGroup>
-        );
-    }
-    return columns;
-};
+const FilterModal: React.FC<FilterModalProps> = ({ open, onClose, onApplyFilters }) => {
+    const [selectedRarity, setSelectedRarity] = useState<string[]>([]);
+    const [selectedQuality, setSelectedQuality] = useState<string[]>([]);
+    const [selectedItemGroup, setSelectedItemGroup] = useState<string[]>([]);
 
-const FilterModal: React.FC<FilterModalProps> = ({ open, onClose }) => {
+    const handleCheckboxChange = (option: string, setSelected: React.Dispatch<React.SetStateAction<string[]>>) => {
+        setSelected((prev) => 
+            prev.includes(option) ? prev.filter((item) => item !== option) : [...prev, option]
+        );
+    };
+
+    const handleApplyFilters = () => {
+        onApplyFilters({
+            rarity: selectedRarity,
+            quality: selectedQuality,
+            itemgroup: selectedItemGroup,
+        });
+        onClose();
+    };
+
+    useEffect(() => {
+        if (!open) {
+            setSelectedRarity([]);
+            setSelectedQuality([]);
+            setSelectedItemGroup([]);
+        }
+    }, [open]);
+
     return (
         <Modal open={open} onClose={onClose}>
             <Box className={styles.modalContent}>
                 <h2>Фильтры</h2>
                 <div className={styles.filterContainer}>
-                <FormControl component="fieldset" className={styles.filterBlock}>
+                    <FormControl component="fieldset" className={styles.filterBlock}>
                         <h3>Тип предмета</h3>
                         <div className={styles.checkboxContainer}>
-                            {renderCheckboxes(itemGroupOptions)}
+                            {itemGroupOptions.map((option) => (
+                                <FormControlLabel
+                                    key={option}
+                                    control={
+                                        <Checkbox
+                                            checked={selectedItemGroup.includes(option)}
+                                            onChange={() => handleCheckboxChange(option, setSelectedItemGroup)}
+                                        />
+                                    }
+                                    label={option}
+                                />
+                            ))}
                         </div>
                     </FormControl>
                     <FormControl component="fieldset" className={styles.filterBlock}>
                         <h3>Rarity</h3>
                         <div className={styles.checkboxContainer}>
-                            {renderCheckboxes(rarityOptions)}
+                            {rarityOptions.map((option) => (
+                                <FormControlLabel
+                                    key={option}
+                                    control={
+                                        <Checkbox
+                                            checked={selectedRarity.includes(option)}
+                                            onChange={() => handleCheckboxChange(option, setSelectedRarity)}
+                                        />
+                                    }
+                                    label={option}
+                                />
+                            ))}
                         </div>
                     </FormControl>
                     <FormControl component="fieldset" className={styles.filterBlock}>
                         <h3>Quality</h3>
                         <div className={styles.checkboxContainer}>
-                            {renderCheckboxes(qualityOptions)}
+                            {qualityOptions.map((option) => (
+                                <FormControlLabel
+                                    key={option}
+                                    control={
+                                        <Checkbox
+                                            checked={selectedQuality.includes(option)}
+                                            onChange={() => handleCheckboxChange(option, setSelectedQuality)}
+                                        />
+                                    }
+                                    label={option}
+                                />
+                            ))}
                         </div>
                     </FormControl>
-                    
                 </div>
-                <Button onClick={onClose} variant="contained" color="primary" className={styles.applyButton}>
+                <Button onClick={handleApplyFilters} variant="contained" color="primary" className={styles.applyButton}>
                     Применить
                 </Button>
             </Box>

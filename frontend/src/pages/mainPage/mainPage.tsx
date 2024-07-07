@@ -15,10 +15,11 @@ const api = process.env.REACT_APP_API;
 export default function MainPage() {
     const { data, loading, setData, setLoading, gameCode } = useGameStore();
     const [open, setOpen] = useState(false);
-    const [filterOpen, setFilterOpen] = useState(false); // Состояние для модального окна фильтров
+    const [filterOpen, setFilterOpen] = useState(false);
     const [selectedPZ, setSelectedPZ] = useState<PZCoefficient[]>([]);
     const [selectedItemName, setSelectedItemName] = useState<string>('');
     const [sortConfig, setSortConfig] = useState<{ key: string, direction: 'asc' | 'desc' }>({ key: '', direction: 'asc' });
+    const [filters, setFilters] = useState<{ rarity: string[], quality: string[], itemgroup: string[] }>({ rarity: [], quality: [], itemgroup: [] });
     const { currentPage, handlePageChange, itemsPerPage } = usePagination(9);
 
     const fetchData = async (gameCode: number) => {
@@ -65,8 +66,19 @@ export default function MainPage() {
         return key.split('.').reduce((acc: any, part: string) => acc && acc[part], item);
     };
 
+    const applyFilters = (data: Item[], filters: { rarity: string[], quality: string[], itemgroup: string[] }) => {
+        return data.filter(item => {
+            const rarityMatch = filters.rarity.length === 0 || filters.rarity.includes(item.rarity || '');
+            const qualityMatch = filters.quality.length === 0 || filters.quality.includes(item.quality || '');
+            const itemGroupMatch = filters.itemgroup.length === 0 || filters.itemgroup.includes(item.itemgroup || '');
+            return rarityMatch && qualityMatch && itemGroupMatch;
+        });
+    };
+
+    const filteredData = useMemo(() => applyFilters(data, filters), [data, filters]);
+
     const sortedData = useMemo(() => {
-        let sortableData = [...data];
+        let sortableData = [...filteredData];
         if (sortConfig.key) {
             sortableData.sort((a, b) => {
                 const aValue = parseFloat(getValueByKey(a, sortConfig.key) as string) || 0;
@@ -81,7 +93,7 @@ export default function MainPage() {
             });
         }
         return sortableData;
-    }, [data, sortConfig]);
+    }, [filteredData, sortConfig]);
 
     const currentData = sortedData.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
@@ -111,7 +123,7 @@ export default function MainPage() {
                     <Chart data={selectedPZ} itemName={selectedItemName} />
                 </div>
             </Modal>
-            <FilterModal open={filterOpen} onClose={() => setFilterOpen(false)} />
+            <FilterModal open={filterOpen} onClose={() => setFilterOpen(false)} onApplyFilters={setFilters} />
         </div>
     );
 }

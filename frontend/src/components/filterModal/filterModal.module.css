@@ -19,11 +19,7 @@
     justify-content: space-around;
     gap: 40px;
 }
-/* 
-.filterBlock {
-    margin: 20px 20px;
-    
-} */
+
 
 .checkboxContainer {
     display: flex;

@@ -13,7 +13,7 @@ import { useGameStore } from '../../storage/gameStore';
 import styles from './header.module.css';
 import { Link, useNavigate } from 'react-router-dom';
 import { useUserStore } from "../../storage/userStore";
-import FilterModal from '../../components/filterModal/filterModal'; // Импортируем новый компонент
+import FilterModal from '../../components/filterModal/filterModal';
 
 const api = process.env.REACT_APP_API;
 
@@ -23,7 +23,7 @@ export default function Header() {
     const { gameCode, setGameCode, setData } = useGameStore();
     const { user, logout, login } = useUserStore();
     const navigate = useNavigate();
-    const [filterOpen, setFilterOpen] = useState(false); // Состояние для модального окна фильтров
+    const [filterOpen, setFilterOpen] = useState(false); 
 
     const handleMenuClick = (event: React.MouseEvent<HTMLButtonElement>) => {
         setAnchorEl(event.currentTarget);
@@ -58,7 +58,7 @@ export default function Header() {
     };
 
     const handleFilters = () => {
-        setFilterOpen(true); // Открываем модальное окно фильтров
+        setFilterOpen(true); 
     };
 
     const handleLoginClick = () => {
