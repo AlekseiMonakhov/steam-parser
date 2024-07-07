@@ -31,7 +31,10 @@ CREATE TABLE IF NOT EXISTS steam_items (
   icon_url VARCHAR(512),
   icon_url_large VARCHAR(512),
   item_nameid VARCHAR(255) NULL,
-  appid INTEGER
+  appid INTEGER,
+  rarity VARCHAR(255) NULL,
+  quality VARCHAR(255) NULL,
+  itemgroup VARCHAR(255) NULL
 );
 
 CREATE TABLE IF NOT EXISTS price_history (
