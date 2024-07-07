@@ -9,10 +9,10 @@ def fetch_order_data(appid):
     conn = get_db_connection()
     cursor = conn.cursor()
 
-    cursor.execute("""
-    ALTER TABLE item_orders
-    ADD COLUMN IF NOT EXISTS date DATE;
-    """)
+    # cursor.execute("""
+    # ALTER TABLE item_orders
+    # ADD COLUMN IF NOT EXISTS date DATE;
+    # """)
 
     conn.commit()
 
@@ -41,13 +41,13 @@ def fetch_order_data(appid):
             logging.warning(f"Skipping item with id {item_id} because item_nameid is None")
             continue
 
-        cursor.execute('''
-        SELECT 1 FROM item_orders WHERE item_id = %s AND date = %s
-        ''', (item_id, today))
+        # cursor.execute('''
+        # SELECT 1 FROM item_orders WHERE item_id = %s AND date = %s
+        # ''', (item_id, today))
 
-        if cursor.fetchone():
-            logging.info(f"Orders for item {item_id} already exist for today. Skipping API request.")
-            continue
+        # if cursor.fetchone():
+        #     logging.info(f"Orders for item {item_id} already exist for today. Skipping API request.")
+        #     continue
 
         referer_url = f"https://steamcommunity.com/market/listings/{appid}/{item_nameid}"
         session.headers.update({'Referer': referer_url})
