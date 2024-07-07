@@ -1,20 +1,6 @@
 import { create } from 'zustand';
+import { Item } from '../types/itemTypes';
 
-interface PZCoefficient {
-    price: string;
-    coefficientPZ: number;
-}
-
-interface Item {
-    market_name: string;
-    coefficientL: number;
-    coefficientSR: number;
-    coefficientSRN: number;
-    coefficientV: number;
-    coefficientP: number;
-    coefficientPZ: PZCoefficient;
-    top100PZCoefficients: PZCoefficient[];
-}
 
 interface GameState {
     gameCode: number;

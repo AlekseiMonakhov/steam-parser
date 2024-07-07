@@ -4,23 +4,25 @@ import Pagination from '@mui/material/Pagination';
 import CircularProgress from '@mui/material/CircularProgress';
 import Modal from '@mui/material/Modal';
 import Chart from '../../components/chart/chart';
-import { Item, PZCoefficient } from "./types";
 import { useGameStore } from '../../storage/gameStore';
 import usePagination from '../../hooks/usePagination';
 import DataTable from "../../components/dataTable/dataTable";
+import { Item, PZCoefficient } from '../../types/itemTypes';
+import FilterModal from '../../components/filterModal/filterModal';
 
 const api = process.env.REACT_APP_API;
 
 export default function MainPage() {
     const { data, loading, setData, setLoading, gameCode } = useGameStore();
     const [open, setOpen] = useState(false);
+    const [filterOpen, setFilterOpen] = useState(false); // Состояние для модального окна фильтров
     const [selectedPZ, setSelectedPZ] = useState<PZCoefficient[]>([]);
     const [selectedItemName, setSelectedItemName] = useState<string>('');
     const [sortConfig, setSortConfig] = useState<{ key: string, direction: 'asc' | 'desc' }>({ key: '', direction: 'asc' });
     const { currentPage, handlePageChange, itemsPerPage } = usePagination(9);
 
     const fetchData = async (gameCode: number) => {
-          try {
+        try {
             const response = await fetch(`http://${api}:3008/api/coefficients/${gameCode}`);
             const result = await response.json();
             if (result.length > 0) {
@@ -109,6 +111,7 @@ export default function MainPage() {
                     <Chart data={selectedPZ} itemName={selectedItemName} />
                 </div>
             </Modal>
+            <FilterModal open={filterOpen} onClose={() => setFilterOpen(false)} /> {/* Модальное окно фильтров */}
         </div>
     );
 }

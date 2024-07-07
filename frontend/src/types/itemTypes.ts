@@ -12,4 +12,7 @@ export interface Item {
     coefficientP: number;
     coefficientPZ: PZCoefficient;
     top100PZCoefficients: PZCoefficient[];
+    rarity?: string;
+    quality?: string;
+    itemgroup?: string;
 }

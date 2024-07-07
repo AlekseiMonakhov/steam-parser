@@ -22,6 +22,7 @@ export default function Header() {
     const { gameCode, setGameCode, setData } = useGameStore();
     const { user, logout, login } = useUserStore();
     const navigate = useNavigate();
+    const [filterOpen, setFilterOpen] = useState(false); 
 
     const handleMenuClick = (event: React.MouseEvent<HTMLButtonElement>) => {
         setAnchorEl(event.currentTarget);
@@ -50,12 +51,14 @@ export default function Header() {
         }
     };
 
-
     const handleMenuItemClick = () => {
         logout();
         setAnchorEl(null);
     };
 
+    const handleFilters = () => {
+        setFilterOpen(true); 
+    };
 
     const handleLoginClick = () => {
         const mockUser = {
@@ -122,30 +125,26 @@ export default function Header() {
                         <Typography variant="h6" sx={{ flexGrow: 1, textAlign: 'center', fontWeight: 'bold', fontSize: '2.5rem', color: 'darkred' }}>
                             ASystems
                         </Typography>
-                        <Button
-                            // onClick={handleRecalculate}
-                            className={styles.recalculateButton}
-                            sx={{
-                                background: 'linear-gradient(45deg, #2F4F4F 20%, #8B0000 90%)',
-                                border: 0,
-                                borderRadius: 3,
-                                boxShadow: '0 3px 5px 2px rgba(47, 79, 79, .3)',
-                                color: '#FFE4E1',
-                                height: 48,
-                                padding: '0 20px',
-                                textAlign: 'center',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                '&:disabled': {
-                                    background: 'linear-gradient(45deg, #2F4F4F 20%, #8B0000 90%)',
-                                    opacity: 0.5,
-                                }
-                            }}
-                        >
-                            Фильтры
-                        </Button>
                     </Link>
+                    <Button
+                        onClick={handleFilters}
+                        className={styles.recalculateButton}
+                        sx={{
+                            background: 'linear-gradient(45deg, #2F4F4F 20%, #8B0000 90%)',
+                            border: 0,
+                            borderRadius: 3,
+                            boxShadow: '0 3px 5px 2px rgba(47, 79, 79, .3)',
+                            color: '#FFE4E1',
+                            height: 48,
+                            padding: '0 20px',
+                            textAlign: 'center',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center'
+                        }}
+                    >
+                        Фильтры
+                    </Button>
                     {user ? (
                         <Box className={styles.MenuButton}>
                             <IconButton

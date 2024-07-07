@@ -227,7 +227,7 @@ class CoefficientCalculator {
   async calculateAndCacheCoefficients() {
     const start = performance.now();
     const itemsQuery = `
-      SELECT id, market_name
+      SELECT id, market_name, rarity, quality, itemgroup
       FROM steam_items
       WHERE appid = $1
     `;
@@ -264,6 +264,9 @@ class CoefficientCalculator {
           coefficientP,
           coefficientPZ: topCoefficientPZ,
           top100PZCoefficients,
+          rarity: item.rarity,
+          quality: item.quality,
+          itemgroup: item.itemgroup,
         };
       // }
     });
