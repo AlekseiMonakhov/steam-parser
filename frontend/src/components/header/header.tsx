@@ -14,6 +14,7 @@ import styles from './header.module.css';
 import { Link, useNavigate } from 'react-router-dom';
 import { useUserStore } from "../../storage/userStore";
 import FilterModal from '../../components/filterModal/filterModal';
+import { useFiltersStore } from '../../storage/filterStore';
 
 const api = process.env.REACT_APP_API;
 
@@ -24,7 +25,7 @@ export default function Header() {
     const { user, logout, login } = useUserStore();
     const navigate = useNavigate();
     const [filterOpen, setFilterOpen] = useState(false); 
-    const [filters, setFilters] = useState<{ rarity: string[], quality: string[], itemgroup: string[] }>({ rarity: [], quality: [], itemgroup: [] });
+    const { filters, setFilters } = useFiltersStore();
 
     const handleMenuClick = (event: React.MouseEvent<HTMLButtonElement>) => {
         setAnchorEl(event.currentTarget);
@@ -72,8 +73,8 @@ export default function Header() {
         login(mockUser.username);
     };
 
-    const handleApplyFilters = (filters: { rarity: string[], quality: string[], itemgroup: string[] }) => {
-        setFilters(filters);
+    const handleApplyFilters = (newFilters: { rarity: string[], quality: string[], itemgroup: string[] }) => {
+        setFilters(newFilters);
         setFilterOpen(false);
     };
 

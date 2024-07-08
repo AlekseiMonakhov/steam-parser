@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Modal, Box, FormControl, FormGroup, FormControlLabel, Checkbox, Button } from '@mui/material';
 import styles from './filterModal.module.css';
+import { useFiltersStore } from '../../storage/filterStore'; 
 
 const rarityOptions = [
     'rare', 'common', 'master', 'immortal', 'restricted', 'high grade', 'remarkable', 'mythical', 'mil-spec grade', 'classified', 'standardqualität', 'arcana', 'legendary', 'covert', 'superior', 'base grade', 'industrial grade', 'exotic', 'distinguished', 'extraordinary', 'exceptional', 'consumer grade'
@@ -21,10 +22,11 @@ interface FilterModalProps {
     currentFilters: { rarity: string[], quality: string[], itemgroup: string[] };
 }
 
-const FilterModal: React.FC<FilterModalProps> = ({ open, onClose, onApplyFilters, currentFilters }) => {
-    const [selectedRarity, setSelectedRarity] = useState<string[]>(currentFilters.rarity);
-    const [selectedQuality, setSelectedQuality] = useState<string[]>(currentFilters.quality);
-    const [selectedItemGroup, setSelectedItemGroup] = useState<string[]>(currentFilters.itemgroup);
+const FilterModal: React.FC<FilterModalProps> = ({ open, onClose, onApplyFilters }) => {
+    const { filters, setFilters } = useFiltersStore(); 
+    const [selectedRarity, setSelectedRarity] = useState<string[]>(filters.rarity);
+    const [selectedQuality, setSelectedQuality] = useState<string[]>(filters.quality);
+    const [selectedItemGroup, setSelectedItemGroup] = useState<string[]>(filters.itemgroup);
 
     const handleCheckboxChange = (option: string, setSelected: React.Dispatch<React.SetStateAction<string[]>>) => {
         setSelected((prev) => 
@@ -33,21 +35,22 @@ const FilterModal: React.FC<FilterModalProps> = ({ open, onClose, onApplyFilters
     };
 
     const handleApplyFilters = () => {
-        onApplyFilters({
+        const newFilters = {
             rarity: selectedRarity,
             quality: selectedQuality,
             itemgroup: selectedItemGroup,
-        });
-        onClose();
+        };
+        setFilters(newFilters);
+        onApplyFilters(newFilters);
     };
 
     useEffect(() => {
         if (open) {
-            setSelectedRarity(currentFilters.rarity);
-            setSelectedQuality(currentFilters.quality);
-            setSelectedItemGroup(currentFilters.itemgroup);
+            setSelectedRarity(filters.rarity);
+            setSelectedQuality(filters.quality);
+            setSelectedItemGroup(filters.itemgroup);
         }
-    }, [open, currentFilters]);
+    }, [open, filters]);
 
     return (
         <Modal open={open} onClose={onClose}>

@@ -11,7 +11,8 @@ const usePagination = (initialItemsPerPage: number) => {
     return {
         currentPage,
         handlePageChange,
-        itemsPerPage
+        itemsPerPage,
+        setCurrentPage
     };
 };
 
