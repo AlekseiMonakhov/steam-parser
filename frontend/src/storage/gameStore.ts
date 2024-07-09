@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { Item } from '../types/itemTypes';
-
+import { useFiltersStore } from './filterStore';
 
 interface GameState {
     gameCode: number;
@@ -18,6 +18,7 @@ export const useGameStore = create<GameState>((set) => ({
     setGameCode: (code) => {
         set({ gameCode: code });
         localStorage.setItem('gameCode', code.toString());
+        useFiltersStore.getState().clearFilters();
     },
     data: [],
     loading: true,
