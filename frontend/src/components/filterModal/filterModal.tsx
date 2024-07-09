@@ -47,9 +47,9 @@ interface FilterModalProps {
 const FilterModal: React.FC<FilterModalProps> = ({ open, onClose, onApplyFilters }) => {
     const { filters, setFilters, clearFilters } = useFiltersStore();
     const { gameCode } = useGameStore();
-    const [selectedRarity, setSelectedRarity] = useState<string[]>(filters.rarity);
-    const [selectedQuality, setSelectedQuality] = useState<string[]>(filters.quality);
-    const [selectedItemGroup, setSelectedItemGroup] = useState<string[]>(filters.itemgroup);
+    const [selectedRarity, setSelectedRarity] = useState<string[]>([]);
+    const [selectedQuality, setSelectedQuality] = useState<string[]>([]);
+    const [selectedItemGroup, setSelectedItemGroup] = useState<string[]>([]);
 
     const rarityOptions = gameCode === 730 ? rarityOptions730 : gameCode === 570 ? rarityOptions570 : [];
     const qualityOptions = gameCode === 730 ? qualityOptions730 : gameCode === 570 ? qualityOptions570 : [];

@@ -15,31 +15,33 @@ const api = process.env.REACT_APP_API;
 
 export default function MainPage() {
     const { data, loading, setData, setLoading, gameCode } = useGameStore();
+    const { filters, clearFilters } = useFiltersStore();
     const [open, setOpen] = useState(false);
     const [filterOpen, setFilterOpen] = useState(false);
     const [selectedPZ, setSelectedPZ] = useState<PZCoefficient[]>([]);
     const [selectedItemName, setSelectedItemName] = useState<string>('');
     const [sortConfig, setSortConfig] = useState<{ key: string, direction: 'asc' | 'desc' }>({ key: '', direction: 'asc' });
-    const { filters } = useFiltersStore();
     const { currentPage, handlePageChange, itemsPerPage, setCurrentPage } = usePagination(9);
 
     const fetchData = useCallback(async (gameCode: number) => {
+        setLoading(true);
         try {
             const response = await fetch(`http://${api}:3008/api/coefficients/${gameCode}`);
             const result = await response.json();
             if (result.length > 0) {
                 setData(result);
-                setLoading(false);
             }
         } catch (error) {
             console.error('Error fetching data:', error);
+        } finally {
             setLoading(false);
         }
     }, [setData, setLoading]);
 
     useEffect(() => {
+        clearFilters();
         fetchData(gameCode);
-    }, [gameCode, fetchData]);
+    }, [gameCode, fetchData, clearFilters]);
 
     const handleOpen = (pzData: PZCoefficient[], itemName: string) => {
         setSelectedPZ(pzData);
