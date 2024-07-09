@@ -2,17 +2,39 @@ import React, { useState, useEffect } from 'react';
 import { Modal, Box, FormControl, FormGroup, FormControlLabel, Checkbox, Button } from '@mui/material';
 import styles from './filterModal.module.css';
 import { useFiltersStore } from '../../storage/filterStore'; 
+import { useGameStore } from '../../storage/gameStore';
 
-const rarityOptions = [
-    'rare', 'common', 'master', 'immortal', 'restricted', 'high grade', 'remarkable', 'mythical', 'mil-spec grade', 'classified', 'standardqualität', 'arcana', 'legendary', 'covert', 'superior', 'base grade', 'industrial grade', 'exotic', 'distinguished', 'extraordinary', 'exceptional', 'consumer grade'
+const rarityOptions730 = [
+    'master', 'restricted', 'high grade', 'mil-spec grade', 
+    'classified', 'covert',
+    'superior', 'base grade', 'industrial grade', 
+    'exotic', 'distinguished', 'extraordinary', 
+    'exceptional', 'consumer grade', 'remarkable'
 ];
 
-const qualityOptions = [
-    'unique', 'normal', 'genuine', 'strange', 'exalted', 'unusual'
+const qualityOptions730 = [
+    'normal', 'strange', 'unusual'
 ];
 
-const itemGroupOptions = [
-    'taunt', 'loading screen', 'agent', 'wearable', 'rifle', 'music kit', 'collectible', 'bundle', 'sniper rifle', 'shotgun', 'behälter', 'dire towers', 'pistol', 'schlüssel', 'container', 'machinegun', 'gem / rune', 'treasure', 'radiant towers', 'sticker', 'equipment', 'gloves', 'knife', 'smg'
+const itemGroupOptions730 = [
+    'agent', 'music kit', 'rifle', 'shotgun', 'patch', 'sniper rifle', 'smg',
+    'pistol', 'container', 'machinegun',
+    'sticker', 'equipment', 'gloves', 'knife'
+];
+
+const rarityOptions570 = [
+    'rare', 'common', 'immortal', 'mythical', 'arcana', 
+    'legendary', 'uncommon'
+];
+
+const qualityOptions570 = [
+    'unique', 'strange', 'genuine', 'exalted'
+];
+
+const itemGroupOptions570 = [
+    'taunt', 'loading screen', 'wearable', 'bundle', 
+    'dire towers', 'gem / rune', 'treasure', 
+    'radiant towers', 'player card'
 ];
 
 interface FilterModalProps {
@@ -23,10 +45,15 @@ interface FilterModalProps {
 }
 
 const FilterModal: React.FC<FilterModalProps> = ({ open, onClose, onApplyFilters }) => {
-    const { filters, setFilters } = useFiltersStore(); 
+    const { filters, setFilters } = useFiltersStore();
+    const { gameCode } = useGameStore();
     const [selectedRarity, setSelectedRarity] = useState<string[]>(filters.rarity);
     const [selectedQuality, setSelectedQuality] = useState<string[]>(filters.quality);
     const [selectedItemGroup, setSelectedItemGroup] = useState<string[]>(filters.itemgroup);
+
+    const rarityOptions = gameCode === 730 ? rarityOptions730 : gameCode === 570 ? rarityOptions570 : [];
+    const qualityOptions = gameCode === 730 ? qualityOptions730 : gameCode === 570 ? qualityOptions570 : [];
+    const itemGroupOptions = gameCode === 730 ? itemGroupOptions730 : gameCode === 570 ? itemGroupOptions570 : [];
 
     const handleCheckboxChange = (option: string, setSelected: React.Dispatch<React.SetStateAction<string[]>>) => {
         setSelected((prev) => 
@@ -52,6 +79,10 @@ const FilterModal: React.FC<FilterModalProps> = ({ open, onClose, onApplyFilters
         }
     }, [open, filters]);
 
+    if (gameCode !== 730 && gameCode !== 570) {
+        return null;
+    }
+
     return (
         <Modal open={open} onClose={onClose}>
             <Box className={styles.modalContent}>
@@ -75,7 +106,7 @@ const FilterModal: React.FC<FilterModalProps> = ({ open, onClose, onApplyFilters
                         </div>
                     </FormControl>
                     <FormControl component="fieldset" className={styles.filterBlock}>
-                        <h3>Rarity</h3>
+                        <h3>Редкость</h3>
                         <div className={styles.checkboxContainer}>
                             {rarityOptions.map((option) => (
                                 <FormControlLabel
@@ -92,7 +123,7 @@ const FilterModal: React.FC<FilterModalProps> = ({ open, onClose, onApplyFilters
                         </div>
                     </FormControl>
                     <FormControl component="fieldset" className={styles.filterBlock}>
-                        <h3>Quality</h3>
+                        <h3>Качество</h3>
                         <div className={styles.checkboxContainer}>
                             {qualityOptions.map((option) => (
                                 <FormControlLabel

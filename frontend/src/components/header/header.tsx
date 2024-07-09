@@ -137,6 +137,7 @@ export default function Header() {
                     <Button
                         onClick={handleFilters}
                         className={styles.recalculateButton}
+                        disabled={gameCode !== 730 && gameCode !== 570}
                         sx={{
                             background: 'linear-gradient(45deg, #2F4F4F 20%, #8B0000 90%)',
                             border: 0,
@@ -148,7 +149,11 @@ export default function Header() {
                             textAlign: 'center',
                             display: 'flex',
                             alignItems: 'center',
-                            justifyContent: 'center'
+                            justifyContent: 'center',
+                            '&:disabled': {
+                                background: 'linear-gradient(45deg, #2F4F4F 20%, #8B0000 90%)',
+                                opacity: 0.5,
+                            }
                         }}
                     >
                         Фильтры
