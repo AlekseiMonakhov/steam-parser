@@ -19,7 +19,7 @@ load_dotenv()
 
 app = Flask(__name__)
 
-APP_IDS = [730, 530, 578080]
+APP_IDS = [730, 570, 578080]
 
 def run_service(appid):
     service = SteamItemService(Config.API_KEY, appid)
@@ -35,12 +35,10 @@ def items(appid):
 def schedule_tasks():
     scheduler = BackgroundScheduler()
 
-    # Запуск get_steam_items и последующего сохранения в БД для всех appid
     for appid in APP_IDS:
         scheduler.add_job(run_service, args=[appid], trigger=DateTrigger(run_date=datetime.datetime.now()))
         scheduler.add_job(run_service, args=[appid], trigger=IntervalTrigger(hours=12))
 
-    # Запуск fetch_item_nameids для каждого appid по очереди
     for appid in APP_IDS:
         scheduler.add_job(ItemNameIdParser().fetch_item_nameids, args=[appid], trigger=DateTrigger(run_date=datetime.datetime.now() + datetime.timedelta(seconds=10)))
 
@@ -49,7 +47,6 @@ def schedule_tasks():
     scheduler.add_job(ItemRarityQualityItemgroupParser().fetch_and_update_items, args=[570, 'dota'], trigger=DateTrigger(run_date=datetime.datetime.now()))
     scheduler.add_job(ItemRarityQualityItemgroupParser().fetch_and_update_items, args=[570, 'dota'], trigger=IntervalTrigger(hours=12))
 
-    # Запуск fetch_order_data для каждого appid с интервалом в 12 часов и начальным запуском
     scheduler.add_job(fetch_order_data, args=[730], trigger=DateTrigger(run_date=datetime.datetime.now()))
     scheduler.add_job(fetch_order_data, args=[730], trigger=IntervalTrigger(hours=12))
 
@@ -59,7 +56,6 @@ def schedule_tasks():
     scheduler.add_job(fetch_order_data, args=[578080], trigger=DateTrigger(run_date=datetime.datetime.now() + datetime.timedelta(hours=2)))
     scheduler.add_job(fetch_order_data, args=[578080], trigger=IntervalTrigger(hours=12, start_date=datetime.datetime.now() + datetime.timedelta(hours=2)))
 
-    # Запуск fetch_price_history с интервалом в 6 часов
     for appid in APP_IDS:
         scheduler.add_job(fetch_price_history, args=[appid], trigger=DateTrigger(run_date=datetime.datetime.now()))
         scheduler.add_job(fetch_price_history, args=[appid], trigger=IntervalTrigger(hours=6))

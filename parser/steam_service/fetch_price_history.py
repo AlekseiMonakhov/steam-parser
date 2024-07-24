@@ -1,5 +1,6 @@
 import logging
 import requests
+import time
 from database import get_db_connection
 from config import Config
 
@@ -27,31 +28,45 @@ def fetch_price_history(appid):
     batch_size = 20
     items_processed = 0
 
+    delay = 12  
+    max_retries = 3
+
     for item_id, market_hash_name in items:
-        url = f"http://steamcommunity.com/market/pricehistory/?country=KZ&language=english&currency=37&appid={appid}&market_hash_name={market_hash_name}"
-        response = session.get(url)
-        logging.info(f"URL: {url}")
-        logging.info(f"Response Status Code: {response.status_code}")
+        for attempt in range(max_retries):
+            url = f"http://steamcommunity.com/market/pricehistory/?country=KZ&language=english&currency=37&appid={appid}&market_hash_name={market_hash_name}"
+            
+            time.sleep(delay) 
+            
+            response = session.get(url)
+            logging.info(f"URL: {url}")
+            logging.info(f"Response Status Code: {response.status_code}")
 
-        try:
-            data = response.json()
-        except ValueError:
-            logging.error("Failed to decode JSON from response")
-            continue
+            if response.status_code == 429: 
+                logging.warning(f"Rate limit exceeded. Increasing delay and retrying. Attempt {attempt + 1}/{max_retries}")
+                delay *= 2  
+                continue
 
-        if isinstance(data, dict) and data.get('success', True):
-            for entry in data['prices']:
-                date, price, volume = entry
-                formatted_date = date[:-4] + date[-2:]
-                cursor.execute('''
-                INSERT INTO price_history (item_id, date, price, volume)
-                SELECT %s, TO_TIMESTAMP(%s, 'Mon DD YYYY HH24'), %s, %s
-                WHERE NOT EXISTS (
-                    SELECT 1 FROM price_history WHERE item_id = %s AND date = TO_TIMESTAMP(%s, 'Mon DD YYYY HH24')
-                )
-                ''', (item_id, formatted_date, price, volume, item_id, formatted_date))
-        else:
-            logging.error(f"Failed to fetch or parse price history for item {item_id}. Response: {data}")
+            try:
+                data = response.json()
+            except ValueError:
+                logging.error("Failed to decode JSON from response")
+                break  
+
+            if isinstance(data, dict) and data.get('success', True):
+                for entry in data['prices']:
+                    date, price, volume = entry
+                    formatted_date = date[:-4] + date[-2:]
+                    cursor.execute('''
+                    INSERT INTO price_history (item_id, date, price, volume)
+                    SELECT %s, TO_TIMESTAMP(%s, 'Mon DD YYYY HH24'), %s, %s
+                    WHERE NOT EXISTS (
+                        SELECT 1 FROM price_history WHERE item_id = %s AND date = TO_TIMESTAMP(%s, 'Mon DD YYYY HH24')
+                    )
+                    ''', (item_id, formatted_date, price, volume, item_id, formatted_date))
+            else:
+                logging.error(f"Failed to fetch or parse price history for item {item_id}. Response: {data}")
+
+            break  
 
         items_processed += 1
 

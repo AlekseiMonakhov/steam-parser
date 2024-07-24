@@ -1,4 +1,5 @@
 import logging
+import time
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from database import get_db_connection
@@ -45,6 +46,8 @@ class ItemNameIdParser:
                         logging.error(f"item_nameid for {name} not found")
                 except Exception as e:
                     logging.error(f"Error fetching item_nameid for {name}: {e}")
+                
+                time.sleep(36)
         finally:
             driver.quit()
 
