@@ -11,10 +11,8 @@ class CoefficientCalculator {
     const start = performance.now();
     try {
       const result = await client.get(key);
-      console.log(`cacheGet(${key}): ${performance.now() - start}ms`);
       return result;
     } catch (err) {
-      console.log(`cacheGet(${key}) failed: ${performance.now() - start}ms`);
       throw err;
     }
   }
@@ -23,9 +21,7 @@ class CoefficientCalculator {
     const start = performance.now();
     try {
       await client.set(key, value, { EX: expiration });
-      console.log(`cacheSet(${key}): ${performance.now() - start}ms`);
     } catch (err) {
-      console.log(`cacheSet(${key}) failed: ${performance.now() - start}ms`);
       throw err;
     }
   }
@@ -34,14 +30,11 @@ class CoefficientCalculator {
     const start = performance.now();
     const cachedResult = await this.cacheGet(key);
     if (cachedResult) {
-      console.log(`queryWithCache(${key}): cache hit - ${performance.now() - start}ms`);
       return JSON.parse(cachedResult);
     }
     const queryStart = performance.now();
     const result = await pool.query(query, params);
-    console.log(`queryWithCache(${key}): SQL query - ${performance.now() - queryStart}ms`);
     await this.cacheSet(key, JSON.stringify(result.rows));
-    console.log(`queryWithCache(${key}): total - ${performance.now() - start}ms`);
     return result.rows;
   }
 
@@ -54,7 +47,6 @@ class CoefficientCalculator {
         AND item_id = $1
     `;
     const result = await this.queryWithCache(`coefficientL:${item_id}`, query, [item_id]);
-    console.log(`getCoefficientL(${item_id}): ${performance.now() - start}ms`);
     return result[0]?.coefficientl;
   }
 
@@ -72,7 +64,6 @@ class CoefficientCalculator {
       FROM daily_prices
     `;
     const result = await this.queryWithCache(`coefficientSR:${item_id}`, query, [item_id]);
-    console.log(`getCoefficientSR(${item_id}): ${performance.now() - start}ms`);
     return result[0]?.coefficientsr;
   }
 
@@ -90,7 +81,6 @@ class CoefficientCalculator {
       FROM daily_prices
     `;
     const result = await this.queryWithCache(`coefficientSRN:${item_id}`, query, [item_id]);
-    console.log(`getCoefficientSRN(${item_id}): ${performance.now() - start}ms`);
     return result[0]?.coefficientsrn;
   }
 
@@ -108,7 +98,6 @@ class CoefficientCalculator {
       FROM daily_prices
     `;
     const result = await this.queryWithCache(`coefficientV:${item_id}`, query, [item_id]);
-    console.log(`getCoefficientV(${item_id}): ${performance.now() - start}ms`);
     return result[0]?.coefficientv;
   }
 
@@ -121,7 +110,6 @@ class CoefficientCalculator {
         AND item_id = $2
     `;
     const result = await this.queryWithCache(`coefficientS1:${item_id}:${coefficientSR}`, query, [coefficientSR, item_id]);
-    console.log(`getCoefficientS1(${item_id}, ${coefficientSR}): ${performance.now() - start}ms`);
     return result[0]?.coefficients1;
   }
 
@@ -134,28 +122,24 @@ class CoefficientCalculator {
         AND item_id = $2
     `;
     const result = await this.queryWithCache(`coefficientS2:${item_id}:${coefficientSR}`, query, [coefficientSR, item_id]);
-    console.log(`getCoefficientS2(${item_id}, ${coefficientSR}): ${performance.now() - start}ms`);
     return result[0]?.coefficients2;
   }
 
   getCoefficientS3(coefficientS1) {
     const start = performance.now();
     const result = coefficientS1 / 30;
-    console.log(`getCoefficientS3(${coefficientS1}): ${performance.now() - start}ms`);
     return result;
   }
 
   getCoefficientS4(coefficientS2) {
     const start = performance.now();
     const result = coefficientS2 / 30;
-    console.log(`getCoefficientS4(${coefficientS2}): ${performance.now() - start}ms`);
     return result;
   }
 
   getCoefficientP(coefficientS4, coefficientS3) {
     const start = performance.now();
     const result = (coefficientS4 * 0.87) / coefficientS3;
-    console.log(`getCoefficientP(${coefficientS4}, ${coefficientS3}): ${performance.now() - start}ms`);
     return result;
   }
 
@@ -163,7 +147,6 @@ class CoefficientCalculator {
     const start = performance.now();
 
     if (coefficientSR == null || coefficientSR === 0) {
-      console.log(`getBuyOrders(${item_id}, ${coefficientSR}): coefficientSR is invalid. Skipping query. Total execution time: ${performance.now() - start}ms`);
       return [];
     }
 
@@ -183,14 +166,11 @@ class CoefficientCalculator {
 
     const queryStart = performance.now();
     const result = await pool.query(query, [item_id, coefficientSR * 0.5]);
-    console.log(`Query execution time: ${performance.now() - queryStart}ms`);
 
     if (result.rows.length > 0) {
-      console.log(`getBuyOrders(${item_id}, ${coefficientSR}): Found orders. Total execution time: ${performance.now() - start}ms`);
       return result.rows;
     }
 
-    console.log(`getBuyOrders(${item_id}, ${coefficientSR}): No orders found. Total execution time: ${performance.now() - start}ms`);
     return [];
   }
 
@@ -199,8 +179,6 @@ class CoefficientCalculator {
     const start = performance.now();
 
     if (!buyOrders || buyOrders.length === 0 || !coefficientL || !coefficientSR) {
-      console.log(`buyOrders - ${buyOrders}`);
-      console.log(`calculatePZCoefficients: empty data - ${performance.now() - start}ms`);
       return { topCoefficientPZ: { price: 0, coefficientPZ: 0 }, top20PZCoefficients: [] };
     }
 
@@ -220,7 +198,6 @@ class CoefficientCalculator {
     const topCoefficientPZ = topResults[0];
     const top100PZCoefficients = topResults.slice(0, 100);
 
-    console.log(`calculatePZCoefficients: ${performance.now() - start}ms`);
     return { topCoefficientPZ, top100PZCoefficients };
   }
 
@@ -273,7 +250,6 @@ class CoefficientCalculator {
 
     const coefficients = (await Promise.all(coefficientPromises)).filter(Boolean);
     await this.cacheSet(`coefficients:${this.appid}`, JSON.stringify(coefficients));
-    console.log(`calculateAndCacheCoefficients: ${performance.now() - start}ms`);
     return coefficients;
   }
 
@@ -281,10 +257,8 @@ class CoefficientCalculator {
     const start = performance.now();
     const cachedResult = await this.cacheGet(`coefficients:${this.appid}`);
     if (cachedResult) {
-      console.log(`calculateCoefficients: cache hit - ${performance.now() - start}ms`);
       return JSON.parse(cachedResult);
     }
-    console.log(`calculateCoefficients: cache miss - ${performance.now() - start}ms`);
     return this.calculateAndCacheCoefficients();
   }
 }
