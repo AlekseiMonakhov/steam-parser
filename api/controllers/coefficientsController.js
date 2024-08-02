@@ -1,11 +1,11 @@
-const CoefficientCalculator = require('../services/coefficientsService');
+const CoefficientService = require('../services/coefficientsService');
 
 class CoefficientsController {
   async getCoefficients(req, res) {
     const { appid } = req.params;
     try {
-      const calculator = new CoefficientCalculator(appid);
-      const coefficients = await calculator.calculateCoefficients();
+      const service = new CoefficientService(appid);
+      const coefficients = await service.calculateCoefficients();
       res.json(coefficients);
     } catch (error) {
       res.status(500).json({ error: error.message });
@@ -15,11 +15,11 @@ class CoefficientsController {
   async recalculateCoefficients(req, res) {
     const { appid } = req.params;
     try {
-      const calculator = new CoefficientCalculator(appid);
-      const coefficients = await calculator.calculateAndCacheCoefficients();
+      const service = new CoefficientService(appid);
+      const coefficients = await service.calculateAndCacheCoefficients();
       res.json(coefficients);
     } catch (error) {
-      res.status(500)
+      res.status(500).json({ error: error.message });
     }
   }
 }
