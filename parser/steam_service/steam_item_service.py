@@ -19,6 +19,7 @@ class SteamItemService:
         params = {
             'appid': self.appid,
             'search_descriptions': 0,
+            'count': 1000,
             'sort_dir': 'desc',
             'norender': 1
         }

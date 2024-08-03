@@ -9,8 +9,6 @@ from steam_service.fetch_price_history import fetch_price_history
 from steam_service.save_items_to_db import save_items_to_db
 from config import Config
 from apscheduler.schedulers.background import BackgroundScheduler
-from apscheduler.triggers.interval import IntervalTrigger
-from apscheduler.triggers.date import DateTrigger
 import datetime
 
 logging.basicConfig(level=logging.INFO)
@@ -27,38 +25,17 @@ def run_service(appid):
     if items:
         save_items_to_db(items)
 
-@app.route('/items/<int:appid>')
-def items(appid):
-    run_service(appid)
-    return jsonify({"status": "Completed processing items"}), 200
-
 def schedule_tasks():
     scheduler = BackgroundScheduler()
 
     for appid in APP_IDS:
-        scheduler.add_job(run_service, args=[appid], trigger=DateTrigger(run_date=datetime.datetime.now()))
-        scheduler.add_job(run_service, args=[appid], trigger=IntervalTrigger(hours=12))
+        run_service(appid)
 
-    for appid in APP_IDS:
-        scheduler.add_job(ItemNameIdParser().fetch_item_nameids, args=[appid], trigger=DateTrigger(run_date=datetime.datetime.now() + datetime.timedelta(seconds=10)))
+        ItemRarityQualityItemgroupParser().fetch_and_update_items(appid, 'csgo' if appid == 730 else 'dota')
 
-    scheduler.add_job(ItemRarityQualityItemgroupParser().fetch_and_update_items, args=[730, 'csgo'], trigger=DateTrigger(run_date=datetime.datetime.now()))
-    scheduler.add_job(ItemRarityQualityItemgroupParser().fetch_and_update_items, args=[730, 'csgo'], trigger=IntervalTrigger(hours=12))
-    scheduler.add_job(ItemRarityQualityItemgroupParser().fetch_and_update_items, args=[570, 'dota'], trigger=DateTrigger(run_date=datetime.datetime.now()))
-    scheduler.add_job(ItemRarityQualityItemgroupParser().fetch_and_update_items, args=[570, 'dota'], trigger=IntervalTrigger(hours=12))
-
-    scheduler.add_job(fetch_order_data, args=[730], trigger=DateTrigger(run_date=datetime.datetime.now()))
-    scheduler.add_job(fetch_order_data, args=[730], trigger=IntervalTrigger(hours=12))
-
-    scheduler.add_job(fetch_order_data, args=[570], trigger=DateTrigger(run_date=datetime.datetime.now() + datetime.timedelta(hours=1)))
-    scheduler.add_job(fetch_order_data, args=[570], trigger=IntervalTrigger(hours=12, start_date=datetime.datetime.now() + datetime.timedelta(hours=1)))
-
-    scheduler.add_job(fetch_order_data, args=[578080], trigger=DateTrigger(run_date=datetime.datetime.now() + datetime.timedelta(hours=2)))
-    scheduler.add_job(fetch_order_data, args=[578080], trigger=IntervalTrigger(hours=12, start_date=datetime.datetime.now() + datetime.timedelta(hours=2)))
-
-    for appid in APP_IDS:
-        scheduler.add_job(fetch_price_history, args=[appid], trigger=DateTrigger(run_date=datetime.datetime.now()))
-        scheduler.add_job(fetch_price_history, args=[appid], trigger=IntervalTrigger(hours=6))
+        scheduler.add_job(ItemNameIdParser().fetch_item_nameids, args=[appid], id=f'fetch_nameid_{appid}', max_instances=1, misfire_grace_time=60)
+        scheduler.add_job(fetch_order_data, args=[appid], id=f'fetch_order_{appid}', max_instances=1, misfire_grace_time=60)
+        scheduler.add_job(fetch_price_history, args=[appid], id=f'fetch_price_{appid}', max_instances=1, misfire_grace_time=60)
 
     scheduler.start()
 

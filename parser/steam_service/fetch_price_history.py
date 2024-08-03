@@ -7,7 +7,7 @@ from config import Config
 def fetch_price_history(appid):
     conn = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute("SELECT id, market_hash_name FROM steam_items WHERE market_hash_name IS NOT NULL")
+    cursor.execute("SELECT id, market_hash_name FROM steam_items WHERE market_hash_name IS NOT NULL AND appid = %s", (appid,))
     items = cursor.fetchall()
     logging.info(f"Fetched {len(items)} items with valid market_hash_name from database.")
 
@@ -28,22 +28,22 @@ def fetch_price_history(appid):
     batch_size = 20
     items_processed = 0
 
-    delay = 12  
+    delay = 12
     max_retries = 3
 
     for item_id, market_hash_name in items:
         for attempt in range(max_retries):
             url = f"http://steamcommunity.com/market/pricehistory/?country=KZ&language=english&currency=37&appid={appid}&market_hash_name={market_hash_name}"
-            
-            time.sleep(delay) 
-            
+
+            time.sleep(delay)
+
             response = session.get(url)
             logging.info(f"URL: {url}")
             logging.info(f"Response Status Code: {response.status_code}")
 
-            if response.status_code == 429: 
+            if response.status_code == 429:
                 logging.warning(f"Rate limit exceeded. Increasing delay and retrying. Attempt {attempt + 1}/{max_retries}")
-                delay *= 2  
+                delay *= 2
                 continue
 
             try:
